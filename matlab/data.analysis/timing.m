@@ -1,41 +1,28 @@
-function [t_up t_down]=timing(data)
+function [tFrameUp tEsUp tFrameOnEsUp tFrameOnEsDown] = timing(data)
+% [tFrameUp tEsUp tFrameOnEsUp tFrameOnEsDown] = timing(data)
+%    returns the timing infomation of image and electrical stimulus (ES).
+%
+%    The input should be a time series data array from recording program,
+%    usually n-by-3. The output *tFrameUp* and *tEsUp* are the time of frame
+%    signal rising and the time of ES signal rising, usually they mark the
+%    start of these signal. The output *tFrameOnEsUp* and *tFrameOnEsDown* are
+%    the frame number that fall on ES up (rising edge of signal) or ES down
+%    (falling egde of signal), respectively.
 
-[up down]=th(data(:,1),2.5);
-[up2 down2]=th(data(:,2),.6);
-[t_up offset]=findclock(up,up2);
-[t_down offset2]=findclock(up,down2);
-% delta=ceil(mean(t_down-t_up));
-figure;plot(offset/1e4);hold on;plot(offset2/1e4,'r');
+% Zhou Bangyu @ Guo Lab, 2009
+% Copied and modified from Li Hao, 2009
 
-return
+CH_IMAGE = uint8(1);  % The channel of image signal data.
+CH_ES    = uint8(2);  % THe channel of electrical stimulus(ES) signal data.
+THRESHOLD_IMAGE = 2.5; % Threshold for detecting image signal.
+THRESHOLD_ES    = 0.6; % Threshold for detcting ES signal.
 
+[tFrameUp tFrameDown] = findSignalTime(data(:, CH_IMAGE), THRESHOLD_IMAGE);
+[tEsUp tEsDown] = findSignalTime(data(:, CH_ES), THRESHOLD_ES);
 
-function [up down]=th(data,threshold)
+[tFrameOnEsUp tOffsetFrameOnEsUp] = findFrameOnEs(tFrameUp, tEsUp);
+[tFrameOnEsDown tOffsetFrameOnEsDown] = findFrameOnEs(tFrameUp, tEsDown);
+% Find the frames that contain ES signal, either rising edge of ES
+% (tFrameOnEsUp), or falling edge (tFrameOnEsDown), as well as the offsets.
 
-data2=[data(2:end); data(end)];
-
-up=find(data<threshold & data2>threshold);
-down=find(data>threshold & data2<threshold);
-
-if numel(up) ~= numel(down)
-    warning('Number of rising edges unequal to the number of falling edges');
-else
-%     figure;plot(down-up);
-end
-% delta=down-up;
-
-return
-
-
-function [result offset]=findclock(clock,event)
-% result=findclock(clock,event)
-% find the time of events relative to the clock
-% Feb 20 2009 Li Hao
-
-cycle=length(event);
-result=zeros(1,cycle);
-offset=zeros(1,cycle);
-for i=1:cycle
-    [offset(i) result(i)]=min(abs(clock-event(i)));
-end
 return
