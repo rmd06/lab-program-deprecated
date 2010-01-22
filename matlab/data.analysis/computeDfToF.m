@@ -1,18 +1,22 @@
 function dfToFTimeData = computeDfToF(botTimeData, tEvent, ...
     timeLengthBefore, timeLengthAfter)
+% dfToFTimeData = computeDfToF(botTimeData, tEvent, timeLengthBefore, timeLengthAfter)
+%            computes dF/F traces of all the sessions in one BOT trace.
 %
-
-% botTimeData should be [time bot] format, n-by-2, *bot* the time series data
-% of BOT and *time* the corresponding time.
+% *botTimeData* should be in an n-by-nBOT [time bot] format, *bot* being 
+% the time series BOT data of a total number of nBOT and *time* the 
+% corresponding time. *Note* the time in it should be in raw form, 
+% i.e. the unit is 1/10000 second.
 % *tEvent* should be the *time point of the event start* (like ES, drug
 % application, etc.).
-% timeLengthBefore is the length of time before time point tEvent, in
+% *timeLengthBefore* is the length of time before time point tEvent, in
 % seconds. It is also the time period for caculating baseline brightness.
-% timeLengthAfter is the length of time after tEvent, in seconds.
-% timeLengthBefore plus timeLengthAfter is the total time in dF/F data.
-% Output struct dfToFTimeData ...
+% *timeLengthAfter* is the length of time after tEvent, in seconds.
+% *timeLengthBefore* plus *timeLengthAfter* is the total time in dF/F data.
+% Output *dfToFTimeData* is an 1-by-n struct, the i-th in it represents the
+% i-th session in one trial (one BOT trace in the input BOT data)
 
-nSession = numel(tEvent);
+nSession = numel(tEvent); % One event means one session.
 rawTimeLengthBefore = timeLengthBefore * 10000;
 rawTimeLengthAfter = timeLengthAfter * 10000;
 

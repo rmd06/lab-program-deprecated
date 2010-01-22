@@ -13,9 +13,9 @@ function [tFrameUp tEsUp tFrameOnEsUp tFrameOnEsDown] = timing(data)
 % Copied and modified from Li Hao, 2009
 
 CH_IMAGE = uint8(1);  % The channel of image signal data.
-CH_ES    = uint8(2);  % THe channel of electrical stimulus(ES) signal data.
-THRESHOLD_IMAGE = 2.0; % Threshold for detecting image signal.
-THRESHOLD_ES    = 0.6; % Threshold for detcting ES signal.
+CH_ES    = uint8(3);  % THe channel of electrical stimulus(ES) signal data.
+THRESHOLD_IMAGE = 2.5; % Threshold for detecting image signal.
+THRESHOLD_ES    = 2.5; % Threshold for detcting ES signal.
 
 [tFrameUp tFrameDown] = findSignalTime(data(:, CH_IMAGE), THRESHOLD_IMAGE);
 [tEsUp tEsDown] = findSignalTime(data(:, CH_ES), THRESHOLD_ES);
