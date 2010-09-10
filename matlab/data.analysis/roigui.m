@@ -60,11 +60,11 @@ handles.output = hObject;
 
 % Managing inputs: There can be no inputs, or 1 string to indicate image
 % filename, or 1 3-dimensional array that is image data.
-fullFilename = [];
-imageData = [];
 
-handles.imageData = imageData;
-handles.fullFilename = fullFilename;
+handles.imageData = [];
+handles.fullFilename = [];
+handles.roi = [];  
+handles.nRoi = 1;
 % Update handles structure
 guidata(hObject, handles);
 
@@ -219,10 +219,7 @@ else  %  if not loaded, load image and enable buttons
    end
 end
 
-
-handles.roi = [];  % "cache" and initialize some general var
-handles.nRoi = 1;
-handles.isLoaded = isLoaded;
+handles.isLoaded = isLoaded;  % "cache" and initialize some general var
 handles.imageData = imageData;
 handles.fullFilename = fullFilename;
 guidata(hObject, handles);   % update the "cache"
