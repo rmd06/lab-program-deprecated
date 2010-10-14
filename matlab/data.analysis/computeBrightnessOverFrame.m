@@ -15,10 +15,10 @@ end
 bofData = zeros(nSlices, nROIs);
 for iROI = 1:nROIs
     for jSlice = 1:nSlices
-        sliceData = imageData( : , : , jSlice);
-        maskedSliceData = sliceData(roi(iROI).BW);
+        sliceData = imageData( : , : , jSlice);  
+        maskedSliceData = sliceData(roi(iROI).BW);  % Get ROI masked pixel data, is a vector
         meanMaskedSliceData = mean(maskedSliceData);
-        bofData( jSlice , iROI ) = meanMaskedSliceData;
+        bofData( jSlice , iROI ) = meanMaskedSliceData;  % "Kick in" one avaraged brightness at a time
     end
 end
 

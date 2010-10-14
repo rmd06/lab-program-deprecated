@@ -6,7 +6,8 @@ function [data outFullname] = load1p(fullFileName)
 %    If no input argument is specified, or the input is empty, an interface
 %    will pop up for choosing files. 
 %
-%    Returns empty arrays if user canceled file selection in the interface.
+%    Returns empty arrays if user canceled file selection in the interface,
+%    outFullname will be 0.
 % 
 %    The multi-page TIFF file should be grayscale and same size across all
 %    pages. It's meant to be the data from a imaging experiment.
@@ -14,10 +15,12 @@ function [data outFullname] = load1p(fullFileName)
 %    fullFileName is a string and should be filename with full path, 
 %    e.g. 'C:\data\imaging.tif' .
 
+% Dependency:
+%   retrieve_path, update_default_path    
+
 % Written by Li Hao @ Guo Lab, ION, 2009.
 % Modified by Zhou Bangyu @ Guo Lab, ION, Nov. 29, 2009.
-
-% Last update was Sep. 10, 2010
+% Last update was Oct. 14, 2010
 
 if (nargin == 0) | (isempty(fullFileName))
     defaultPath = retrieve_path('tif');
@@ -25,7 +28,7 @@ if (nargin == 0) | (isempty(fullFileName))
     if isequal(FileName, 0)
         disp('TIFF Loading Canceled');
         data = [];
-        outFullname = [];
+        outFullname = 0;
         return
     end    % Deals with user canceling loading.
     fullFileName = strcat(PathName, FileName);

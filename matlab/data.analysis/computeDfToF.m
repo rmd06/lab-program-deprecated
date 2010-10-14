@@ -36,7 +36,7 @@ if max(tEvent) > max(timeData)
 end
 
 % A struct is used to store data in different sessions.
-data(nSessions) = [];
+% data(nSessions) = [];
 for i = 1:nSessions
     % Split botData into sessions, according to tEvent
 	rawData = botTimeData( ...
