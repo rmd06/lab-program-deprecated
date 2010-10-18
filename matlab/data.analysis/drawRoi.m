@@ -1,37 +1,32 @@
-function [ ] = drawRoi( roiData, handleFig )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+function [ ] = drawRoi( roiData, lineSpec, textSpec )
+%drawRoi(roiData, lineSpec, textSpec) plots ROIs depicted in roiData 
+%   on the current axes.
+%
+%   Input roiData must be a struct from *roigui* or *getroi*.
+%
+%   Input lineSpec decides the line style of ROIs' contour, textSepc
+%   decides the text style of ROIs' number.
+%
+%   Inputs lineSpec and textSpec are optional, lineSpec is in fact a cell 
+%   array of parameters of LineSpec of plot function, and textSpec is a
+%   cell array of parameters of text properties of text function. If not
+%   specified, ROIs will be drawn with default values.
+%  
+
+if nargin < 3, textSpec = {'Color', 'w', 'FontWeight','Bold'}; end
+if nargin < 2, lineSpec = {'Color','w','LineWidth',1}; end
+if nargin < 1
+    error('No ROI data specified');
+end
 
 roi = roiData;
 nRoi = size(roi, 2);
 
-hold on;
-
 for i=1:nRoi
-%     figure(handleFig);
-    [roi(i).x, roi(i).y, roi(i).BW, roi(i).xi, roi(i).yi] = roipoly;
-    xmingrid = max(roi(i).x(1), floor(min(roi(i).xi)));
-    xmaxgrid = min(roi(i).x(2), ceil(max(roi(i).xi)));
-    ymingrid = max(roi(i).y(1), floor(min(roi(i).yi)));
-    ymaxgrid = min(roi(i).y(2), ceil(max(roi(i).yi)));
-    roi(i).xgrid = xmingrid : xmaxgrid;
-    roi(i).ygrid = ymingrid : ymaxgrid;
-    [X, Y] = meshgrid(roi(i).xgrid, roi(i).ygrid);
-    inPolygon = inpolygon(X, Y, roi(i).xi, roi(i).yi);
-    Xin = X(inPolygon);
-    Yin = Y(inPolygon);
-        
-    roi(i).area = polyarea(roi(i).xi,roi(i).yi);
-    roi(i).center = [mean(Xin(:)), mean(Yin(:))];
-    
-%     figure(handleFig);
-    hold on; 
-%     plot(roi(i).xi,roi(i).yi,'Color',clrMap(rndprm(i), :),'LineWidth',1);
-%     text(roi(i).center(1), roi(i).center(2), num2str(i),...
-%          'Color', clrMap(rndprm(i), :), 'FontWeight','Bold');
-    plot(roi(i).xi,roi(i).yi,'Color','w','LineWidth',1);
-    text(roi(i).center(1), roi(i).center(2), num2str(i),...
-         'Color', 'w', 'FontWeight','Bold');
+    hold on;
+
+    plot(roi(i).xi,roi(i).yi, lineSpec{:});
+    text(roi(i).center(1), roi(i).center(2), num2str(i), textSpec{:});
 end
 
 end

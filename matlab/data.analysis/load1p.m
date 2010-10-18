@@ -22,7 +22,7 @@ function [data outFullname] = load1p(fullFileName)
 % Modified by Zhou Bangyu @ Guo Lab, ION, Nov. 29, 2009.
 % Last update was Oct. 14, 2010
 
-if (nargin == 0) | (isempty(fullFileName))
+if (nargin == 0) | (isempty(fullFileName))  % if no filename is input
     defaultPath = retrieve_path('tif');
     [FileName, PathName] = uigetfile('*.tif','Select the TIFF file',defaultPath);
     if isequal(FileName, 0)

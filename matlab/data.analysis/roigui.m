@@ -20,9 +20,12 @@ function varargout = roigui(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
+% Dependency(1-level):
+%   load1p, retrieve_path, update_default_path, drawRoi
+
 % Edit the above text to modify the response to help roigui
 
-% Last Modified by GUIDE v2.5 13-Oct-2010 22:55:20
+% Last Modified by GUIDE v2.5 18-Oct-2010 19:59:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,8 +66,10 @@ handles.output = hObject;
 
 handles.imageData = [];
 handles.fullFilename = [];
-handles.roi = [];  
+handles.roi = [];
 handles.nRoi = 0;
+handles.isRoipolyRunning = false;
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -78,74 +83,6 @@ function varargout = roigui_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
-% --- Executes on button press in startendtoggle.
-function startendtoggle_Callback(hObject, eventdata, handles)
-% hObject    handle to startendtoggle (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of startendtoggle
-% As soon as pressed, disable 'Load ROI' button
-set(handles.loadroibutton, 'Enable', 'off');
-
-% Change state and button text and help text
-state = get(hObject,'Value');
-if state == get(hObject,'Max')  % drawing is started
-  set(hObject,'String', 'End'); % change toggle button text to "End"
-  isStarted = true;             % set a flag to indicate state
-  set(handles.tipsbox, 'String', ...
-      'Press End to draw another ROI and stop'); % show tips to end drawing
-end
-if state == get(hObject,'Min')  % drawing will end
-  set(hObject,'String', 'Start'); % change button text to "Start"
-  isStarted = false;
-  set(handles.tipsbox, 'String', ...
-      'Press Start to resume drawing ROIs');
-end
-
-if isStarted
-  % The real work will be done here, as the "Start" button is pressed
-
-  i = handles.nRoi;  % get from "cached" parameters
-  roi = handles.roi;
-  i = i + 1;  % initial conditions, prepare the next roi to "cached" roi
-  while ishandle(handles.axes1)
-  % A loop of drawing polygonal ROIs, end until "End" is pressed
-    if strcmp(get(hObject,'String'), 'Start')
-      break
-    end
-
-    % The magic is really all in this following line
-    [roi(i).x, roi(i).y, roi(i).BW, roi(i).xi, roi(i).yi] = roipoly;
-    
-    % Determing and illustrate ROI contours and numbered tags
-    xmingrid = max(roi(i).x(1), floor(min(roi(i).xi)));
-    xmaxgrid = min(roi(i).x(2), ceil(max(roi(i).xi)));
-    ymingrid = max(roi(i).y(1), floor(min(roi(i).yi)));
-    ymaxgrid = min(roi(i).y(2), ceil(max(roi(i).yi)));
-    roi(i).xgrid = xmingrid : xmaxgrid;
-    roi(i).ygrid = ymingrid : ymaxgrid;
-    [X, Y] = meshgrid(roi(i).xgrid, roi(i).ygrid);
-    inPolygon = inpolygon(X, Y, roi(i).xi, roi(i).yi);
-    Xin = X(inPolygon);
-    Yin = Y(inPolygon);
-        
-    roi(i).area = polyarea(roi(i).xi,roi(i).yi);
-    roi(i).center = [mean(Xin(:)), mean(Yin(:))];
-    
-    hold on;  % will now draw contour and number tag
-    plot(roi(i).xi,roi(i).yi,'Color','w','LineWidth',1);
-    text(roi(i).center(1), roi(i).center(2), num2str(i),...
-         'Color', 'w', 'FontWeight','Bold');
-
-    % Prepare for next ROI
-    i = i + 1;
-    handles.roi = roi; % better to "cache" the ROIs after each is done
-    handles.nRoi = i;
-    guidata(hObject, handles); % update the "cache"
-  end
-end
 
 % --- Executes during object creation, after setting all properties.
 function axes1_CreateFcn(hObject, eventdata, handles)
@@ -186,8 +123,8 @@ function exportbutton_Callback(hObject, eventdata, handles)
 roi = handles.roi;
 imageData = handles.imageData;
 fullFilename = handles.fullFilename;
-drawingState = get(handles.startendtoggle, 'String');
-if strcmp(drawingState, 'Start')
+drawingState = get(handles.startendflag, 'String');
+if strcmp(drawingState, 'ready')
     assignin('base', 'roi', roi); % output to workspace!
     assignin('base', 'imageData', imageData);
     assignin('base', 'fullname', fullFilename);
@@ -222,7 +159,7 @@ else  %  if not loaded, load image and enable buttons
     imagesc(mean(imageData, 3));  % show image stack, averaged
     axis off;
     isLoaded = true;  % set flag to 'loaded'
-    set(handles.startendtoggle, 'Enable', 'on');
+    set(handles.startbutton, 'Enable', 'on');
     set(handles.exportbutton, 'Enable', 'on');
     set(handles.loadroibutton, 'Enable', 'on');
     set(hObject, 'Enable', 'off');
@@ -257,6 +194,7 @@ function loadroibutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+%  Get ROI filename
 defaultPath = retrieve_path('roimat');
 [FileName, PathName] = uigetfile('*.mat','Select the MAT file with roi',defaultPath);
 if isequal(FileName, 0)
@@ -265,12 +203,71 @@ end    % Deals with user canceling loading.
 roiFilename = strcat(PathName, FileName);
 update_default_path(PathName, 'roimat');
 
+% Load ROIs from file
 load(roiFilename, 'roi');
-if exist('roi', 'var') == 1
+if exist('roi', 'var') == 1  % proceed only if variable 'roi' is loaded
   nRoi = size(roi, 2);
 
   %  Draw loaded ROIs
-   for i=1:nRoi
+  drawRoi(roi);
+  
+  handles.roi = roi;
+  handles.nRoi = nRoi;
+  guidata(hObject, handles);
+  
+  set(handles.tipsbox, 'String', 'ROI loaded. Press Start to draw more ROIs');
+  set(handles.startendflag, 'String', 'ready');
+  set(hObject, 'Enable', 'off');
+end
+  
+% --- Executes during object creation, after setting all properties.
+function loadroibutton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to loadroibutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject, 'Enable', 'off'); 
+
+
+% --- Executes on button press in startbutton.
+function startbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to startbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.loadroibutton, 'Enable', 'off');  % Don't load ROI after start
+set(handles.tipsbox, 'String', ...
+      'Started. Press End to draw another ROI and stop'); % show tips to end drawing
+set(hObject, 'Enable', 'off'); 
+set(handles.endbutton, 'Enable', 'on'); 
+
+% The core work will be done here, as the "Start" button is pressed, and
+% don't start multiple times (indicated by isRoipolyRunning)
+
+% get from "cached" parameters
+i = handles.nRoi; % initial conditions, prepare the roi next to "cached" roi
+roi = handles.roi;
+
+% A loop of drawing polygonal ROIs, end until "End" is pressed
+while ishandle(handles.axes1)
+    
+    % When "End" is pressed and roipoly stopped, reset status and break
+    if strcmp(get(handles.startendflag,'String'), 'end') && ~handles.isRoipolyRunning
+        set(hObject, 'Enable', 'on'); 
+        set(handles.startendflag, 'String', 'ready');
+        set(handles.tipsbox, 'String', 'Stopped. Press Start to resume drawing ROIs');
+        break
+    end
+
+    % Prepare for next ROI
+    i = i + 1;
+    
+    handles.isRoipolyRunning = true;  % set flag for roipoly
+    guidata(hObject, handles);
+    % The magic is really all in this following line
+    [roi(i).x, roi(i).y, roi(i).BW, roi(i).xi, roi(i).yi] = roipoly;
+
+    handles.isRoipolyRunning = false;
+
+    % Determing and illustrate ROI contours and numbered tags
     xmingrid = max(roi(i).x(1), floor(min(roi(i).xi)));
     xmaxgrid = min(roi(i).x(2), ceil(max(roi(i).xi)));
     ymingrid = max(roi(i).y(1), floor(min(roi(i).yi)));
@@ -281,27 +278,66 @@ if exist('roi', 'var') == 1
     inPolygon = inpolygon(X, Y, roi(i).xi, roi(i).yi);
     Xin = X(inPolygon);
     Yin = Y(inPolygon);
-        
+
     roi(i).area = polyarea(roi(i).xi,roi(i).yi);
     roi(i).center = [mean(Xin(:)), mean(Yin(:))];
-    
+
     hold on;  % will now draw contour and number tag
     plot(roi(i).xi,roi(i).yi,'Color','w','LineWidth',1);
     text(roi(i).center(1), roi(i).center(2), num2str(i),...
          'Color', 'w', 'FontWeight','Bold');
-  end
-  
-  handles.roi = roi;
-  handles.nRoi = nRoi;
-  guidata(hObject, handles);
-  
-  set(handles.tipsbox, 'String', 'ROI loaded. Press Start to draw more ROIs');
-  set(hObject, 'Enable', 'off');
+
+    handles.roi = roi; % better to "cache" the ROIs after each is done
+    handles.nRoi = i;
 end
-  
+
+guidata(hObject, handles); % update the "cache"
+
+
+
+% --- Executes on button press in endbutton.
+function endbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to endbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+handles.isEndPressed = true;
+set(handles.startendflag, 'String', 'end');
+set(hObject, 'Enable', 'off'); 
+set(handles.tipsbox, 'String', 'Will stop after current ROI');
+
+guidata(hObject, handles);
+
+
 % --- Executes during object creation, after setting all properties.
-function loadroibutton_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to loadroibutton (see GCBO)
+function endbutton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to endbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-set(hObject, 'Enable', 'off'); 
+
+set(hObject, 'Enable', 'off');
+
+
+% --- Executes during object creation, after setting all properties.
+function startbutton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to startbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject, 'Enable', 'off');
+
+
+% --- Executes during object creation, after setting all properties.
+function startendflag_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to startendflag (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% This textbox is used for set flag on the state of start/end, and used in
+% the loop of roipoly as break condition. Very important.
+%
+% By design, there are 3 states of 'String'. As initialization,
+% 'justbegun', 'end' for pressing 'End' button, and 'ready' after the
+% roipoly is actually ended or ROI loaded.
+
+set(hObject, 'Visible', 'off');
+set(hObject, 'String', 'justbegun');

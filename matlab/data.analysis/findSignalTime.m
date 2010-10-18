@@ -3,12 +3,15 @@ function [tUp tDown] = findSignalTime(data, THRESHOLD)
 %               returns the vectors of detected rising edges and falling 
 %               edges of a time series of square wave signals, 'data', the 
 %               amplitude of which characterized by THRESHOLD.
+%
 % Syntax: [tUp tDown] = findSignalTime(data, THRESHOLD)
 %         'data' should be a n by 1 vector of time series data, THRESHOLD
 %         should be an arbitrary number that fits the squal wave signal.
 % 
 
 % Zhou Bangyu @ Guo's Lab, 2009
+% Last update was at Oct 15, 2010
+
 % Copied and modified from Li Hao's original th :
 % 
 % function [up down]=th(data,threshold)
@@ -42,4 +45,4 @@ if numel(tUp) ~= numel(tDown)
     warning('Number of rising edges unequal to the number of falling edges');
 end
 
-return
+end

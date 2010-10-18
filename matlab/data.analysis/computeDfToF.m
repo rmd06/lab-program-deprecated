@@ -1,6 +1,5 @@
 function dfToFTimeData = computeDfToF(botTimeData, tEvent, ...
     timeLengthBefore, timeLengthAfter)
-%%
 % dfToFTimeData = computeDfToF(botTimeData, tEvent, timeLengthBefore, timeLengthAfter)
 %            computes dF/F traces of all the sessions in one BOT trace.
 %
@@ -21,8 +20,11 @@ function dfToFTimeData = computeDfToF(botTimeData, tEvent, ...
 % Output *dfToFTimeData* is an 1-by-n struct, the i-th in it represents the
 % i-th session in one trial (one BOT trace in the input BOT data)
 
+% Dependency:
+%    -
 
-%%
+% Last update was at Oct 15, 2010
+
 nSessions = numel(tEvent); % One event means one session.
 
 tSessionBegin = tEvent - timeLengthBefore ;
@@ -60,5 +62,5 @@ end
 
 dfToFTimeData = data;
 
-return
+
 end
