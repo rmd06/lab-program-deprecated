@@ -27,7 +27,7 @@ printArray(list); // Implemented below
 for (i=0; i<list.length; i++) 
 {
   fullname = dir + list[i];
-  outFullname = outDir + list[i] + ".txt";
+  outFullname = outDir + list[i] + ".time.txt";
   print("Extracting from",list[i]); // Checkpoint: Indicating progress
   
   extractTimeToFile(fullname, outFullname); // Implemented below
