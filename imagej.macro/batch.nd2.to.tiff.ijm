@@ -47,6 +47,14 @@ function convertBioFormatToTif(inFullname, outFullname)
   close();
 }
 
+function convertBioFormatTo8BitTif(inFullname, outFullname)
+{
+  run("Bio-Formats Importer", "open='" + inFullname + "' autoscale color_mode=Default view=[Standard ImageJ] stack_order=Default virtual");
+  run("8-bit");
+  saveAs("Tiff", outFullname);
+  close();
+}
+
 function getFromFileList(ext, fileList)
 {
   // Select from fileList array the filenames with specified extension
