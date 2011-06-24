@@ -45,4 +45,4 @@ if numel(tUp) ~= numel(tDown)
     warning('Number of rising edges unequal to the number of falling edges');
 end
 
-end
+return

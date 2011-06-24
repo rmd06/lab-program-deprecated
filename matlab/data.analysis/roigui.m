@@ -152,7 +152,8 @@ fullFilename = handles.fullFilename;
 if isLoaded % do not load twice
   set(handles.tipsbox, 'String', 'Image already loaded');
 else  %  if not loaded, load image and enable buttons
-  [imageData fullFilename] = load1p();
+  [imageData fullFilename] = load1p();  % load image from file
+  % imageData = evalin('base', 'imageData');  % load image from workspace
   if isempty(imageData)  % deals with user cancelling file selection
     return
   else
