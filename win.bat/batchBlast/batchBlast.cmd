@@ -1,4 +1,4 @@
-:: ver. 1.0b, last update 2011 Oct 9
+:: ver. 1.01b, last update 2011 Oct 9
 :: author zby
 
 :: DESCRIPTION Aims to offer an easy way to check multiple sequencing results 
@@ -37,13 +37,14 @@ echo ^<^/head^> >> %outFile%
 echo ^<body^> >> %outFile%
 
 echo ^<h1^> Results for files in %CD% ^<^/h1^> >> %outFile%
-echo ^<table border="0"^> >> %outFile%
+echo ^<table border="0" ^> >> %outFile%
 
 for /f %%f in ('dir /b *.blastout') do call writeResults.cmd %%f %outFile%
 
-echo ^<^/table^> >>%2
+echo ^<^/table^> >> %outFile%
 echo ^<^/body^> >> %outFile%
 echo ^<^/html^> >> %outFile%
 
-del *.blastout
+for /f %%f in ('dir /b *.blastout') do del %%f
+
 endlocal
