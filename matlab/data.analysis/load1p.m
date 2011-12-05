@@ -44,7 +44,7 @@ nPage = numel(INFO);    % number of pages (frames) in the multi-page TIFF
 x = INFO(1).Width;
 y = INFO(1).Height;
 
-data = zeros(y, x, nPage, 'uint16');
+data = zeros(y, x, nPage, 'int16');
 
 texFullFileName = strrep(fullFileName,'\','\\'); % Make filename TeX.
 handle = waitbar(0,sprintf('Loading image\n%s', texFullFileName));

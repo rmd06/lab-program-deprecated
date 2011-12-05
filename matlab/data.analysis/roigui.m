@@ -157,7 +157,8 @@ else  %  if not loaded, load image and enable buttons
   if isempty(imageData)  % deals with user cancelling file selection
     return
   else
-    imagesc(mean(imageData, 3));  % show image stack, averaged
+%     imagesc(mean(imageData, 3));  % show image stack, averaged
+    imshow(mean(imageData(:,:,1:50),3),[]);
     axis off;
     isLoaded = true;  % set flag to 'loaded'
     set(handles.startbutton, 'Enable', 'on');
