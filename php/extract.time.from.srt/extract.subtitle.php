@@ -100,6 +100,8 @@
             $miliSecStart = srtTime_to_miliSec($subtitle['time_start']);
             $miliSecEnd = srtTime_to_miliSec($subtitle['time_end']);
             $interval = $miliSecEnd - $miliSecStart;
+            $subtitle['start_miliSec'] = $miliSecStart;
+            $subtitle['end_miliSec'] = $miliSecEnd;
             $subtitle['interval_miliSec'] = $interval;
          }
         unset($subtitle);
