@@ -1,5 +1,6 @@
 createCourtshipDf <- function(nRows)
 {
+    # createCourtshipDf will create an empty data frame for holding courtship summary
     df <- data.frame(filename = rep("", nRows), category = rep("", nRows), total_time = rep("", nRows), time_percent = rep(NA, nRows), occurence = rep(NA, nRows), stringsAsFactors=FALSE)
     
     return(df)
@@ -7,31 +8,40 @@ createCourtshipDf <- function(nRows)
 
 sumDfCourtshipByTL <- function(TL, textCatg, dfCourtship)
 {
-  # Return summary time length and occurence of a given 'category' in a courtship data frame
-  
-  ckCatg <- dfCourtship$text==textCatg
-  if (sum(ckCatg, na.rm=TRUE)==0) 
+    #  sumDfCourtshipByTL will return summary about the given behavior category and occurence of _A_ given 'category' for _A_ given time length in a courtship data frame
+
+    # if category does not exist, all the summary should be NA
+    ckCatg <- dfCourtship$text==textCatg
+    if (sum(ckCatg, na.rm=TRUE)==0) 
     {
         sumDf <- data.frame(category = textCatg, total_time = TL, time_percent = NA, occurence = NA, stringsAsFactors=FALSE)
     }
-  else
+    else
     {
+    # if category do exist, calculate interval for the time length provided
+    
+        # select useful columns for the given category (may well be many rows)
         courtshipTextCatg <- dfCourtship[(dfCourtship$text==textCatg)&(dfCourtship$start_miliSec<TL), c('start_miliSec', 'end_miliSec', 'interval_miliSec')]
         
+        # truncate if any 'end' time exceeds the given time length
         if (sum(courtshipTextCatg$end_miliSec>TL, na.rm=TRUE)!=0)
         {
             courtshipTextCatg[courtshipTextCatg$end_miliSec>TL, 'end_miliSec'] <- TL
         }
         
+        # re-calculate all the intervals
         courtshipTextCatg[, 'interval_miliSec'] <- courtshipTextCatg[, 'end_miliSec'] - courtshipTextCatg[, 'start_miliSec']
-      
+    
+        # calculate the fraction of time of this category, in this time length
         textCatgTime <- sum(courtshipTextCatg[, 'interval_miliSec'])/TL
+        # calculate the occurence of this behavior category (namely the number of rows)
         textCatgOccurence <- length(courtshipTextCatg[, 'interval_miliSec'])
       
+        # re-structure and return the summary
         sumDf <- data.frame(category = textCatg, total_time = TL, time_percent = textCatgTime, occurence = textCatgOccurence, stringsAsFactors=FALSE)
     }
-    
-  return(sumDf)
+
+    return(sumDf)
 }
  
 sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'))
@@ -69,21 +79,30 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
   return(dfCatg)
 }
  
-sumCourtshipDir <- function(csvDir="", outfile=paste(csvDir, "/summary.csv", sep=""), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'))
+sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary.csv", sep=""), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'))
 {
+    # sumCourtshipDir will calculate and return a summary of analysed srt files (the csvs)
+    # it also output csv summary files
+    
+    # initializing directory selection
     if (csvDir=="")
     {
         csvDir <- choose.dir()
-        outfile=paste(csvDir, "/summary.csv", sep="")
+        outfile <- paste(csvDir, "/summary.csv", sep="")
     }
     
+    # reading file list
     listCsv <- list.files(path=csvDir, pattern="*.srt.csv", full.names=TRUE)
     nFile <- length(listCsv)
 
+    # preparing Time Length list (a vector of time points) and Category list (a vector of behaviorial tags)
     nTL= length(listTL)
     nCatg=length(listCatg)
     
+    # initialize and prepare the output data frame
     sumCsv <- createCourtshipDf(nFile*nTL*nCatg)
+    
+    # iterate through each csv file, calculating each summary, then inject them to blocks of previously prepared data frame
     for ( iFile in 1:nFile )
     {
         print(listCsv[iFile])
@@ -93,8 +112,24 @@ sumCourtshipDir <- function(csvDir="", outfile=paste(csvDir, "/summary.csv", sep
         print("...done.")
     }
     
-    write.csv(sumCsv, file=outfile)
-    print(paste("written to file", outfile))
+    # Copy a NA=0 version    
+    sumCsvNoNA <- sumCsv
+    sumCsvNoNA[is.na(sumCsvNoNA$time_percent), 'time_percent'] <- 0
+    sumCsvNoNA[is.na(sumCsvNoNA$occurence), 'occurence'] <- 0
+    
+    # save to files
+    if (out)
+    {
+        outfileNoNA <- paste(csvDir, "/summary_noNA.csv", sep="")
+        write.csv(sumCsv, file=outfile)
+        write.csv(sumCsvNoNA, file=outfileNoNA)
+        print(paste("written to file", outfile, "and", outfileNoNA))
+    }
     
     return(sumCsv)
+}
+
+sumCatgForAll <- function(catg, dfSumCourtship)
+{
+
 }
