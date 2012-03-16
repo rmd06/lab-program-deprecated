@@ -139,21 +139,27 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
 
 sumCatgForAll <- function(dfSumCourtship)
 {
+    # sumCatgForAll will do summary statistics on each category for each time length
     
+    # first, get all the categories and time lengths
     factoredSum <- dfSumCourtship
-    factoredSum$filename <- factor(factoredSum$filename)
+    # factoredSum$filename <- factor(factoredSum$filename)
     factoredSum$category <- factor(factoredSum$category)
     factoredSum$total_time <- factor(factoredSum$total_time)
     
     listCatg <- levels(factoredSum$category)
     nCatg <- length(listCatg)
     
+    # sort time length for a bit nicer-looking output
     listTL <- as.character(sort(as.integer(levels(factoredSum$total_time))))
     nTL <- length(listTL)
     
+    # initialize data frame for summary, structure as follows
     # category  total_time  mean_time_percent  sem_time_percent  mean_occurence sem_occurence
     nRow <- nCatg*nTL
     sumDf <- data.frame(category=rep("",nRow), total_time=rep("",nRow), mean_time_percent=rep(NA, nRow), sem_time_percent=rep(NA,nRow), mean_occurence=rep(NA,nRow), sem_occurence=rep(NA,nRow), stringsAsFactors=FALSE)
+    
+    # inject the summaries one by one
     for ( iCatg in 1:nCatg)
     {
         for ( iTL in 1:nTL )
