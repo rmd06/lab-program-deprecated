@@ -46,20 +46,25 @@ sumDfCourtshipByTL <- function(TL, textCatg, dfCourtship)
  
 sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'))
 {
+    # sumCourtshipCsv will analyze a .srt.csv file for a summary of each provided category by each provided time length 
+    
     nTL <- length(listTL)
     nCatg <- length(listCatg)  
     fn <- basename(csvfile)
     
     b<-read.csv(file=csvfile, header=T)
+    
+    # get start time
     TS <- b[b$text=='latency', 'start_miliSec']
-  
+    # re-calibrate time using start time
     b$start_miliSec <- b$start_miliSec - TS
     b$end_miliSec <- b$end_miliSec - TS
     
+    # initialize summary data frame
     # dfCatg <- data.frame(filename = rep(fn, nCatg*nTL), category = rep("", nCatg*nTL), total_time = rep("", nCatg*nTL), time_percent = rep(NA, nCatg*nTL), occurence = rep(NA, nCatg*nTL), stringsAsFactors=FALSE)
-    
     dfCatg <- createCourtshipDf(nCatg*nTL)
     
+    # iterate through each time lenght and each category, putting info. one by one
     for ( iCatg in 1:nCatg) 
         {
         for ( iTL in 1:nTL)
@@ -79,7 +84,7 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
   return(dfCatg)
 }
  
-sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary.csv", sep=""), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'))
+sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary.csv", sep=""), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'), na.zero=FALSE)
 {
     # sumCourtshipDir will calculate and return a summary of analysed srt files (the csvs)
     # it also output csv summary files
@@ -105,7 +110,7 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
     # iterate through each csv file, calculating each summary, then inject them to blocks of previously prepared data frame
     for ( iFile in 1:nFile )
     {
-        print(listCsv[iFile])
+        print(paste("Begin processing", listCsv[iFile]), "...")
         
         sumCsv[((iFile-1)*nTL*nCatg+1):(iFile*nTL*nCatg), ] <- sumCourtshipCsv(listCsv[iFile], listTL, listCatg)
         
@@ -126,10 +131,51 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
         print(paste("written to file", outfile, "and", outfileNoNA))
     }
     
-    return(sumCsv)
+    if (na.zero)
+        return(sumCsvNoNA)
+    else
+        return(sumCsv)
 }
 
-sumCatgForAll <- function(catg, dfSumCourtship)
+sumCatgForAll <- function(dfSumCourtship)
 {
-
+    
+    factoredSum <- dfSumCourtship
+    factoredSum$filename <- factor(factoredSum$filename)
+    factoredSum$category <- factor(factoredSum$category)
+    factoredSum$total_time <- factor(factoredSum$total_time)
+    
+    listCatg <- levels(factoredSum$category)
+    nCatg <- length(listCatg)
+    
+    listTL <- as.character(sort(as.integer(levels(factoredSum$total_time))))
+    nTL <- length(listTL)
+    
+    # category  total_time  mean_time_percent  sem_time_percent  mean_occurence sem_occurence
+    nRow <- nCatg*nTL
+    sumDf <- data.frame(category=rep("",nRow), total_time=rep("",nRow), mean_time_percent=rep(NA, nRow), sem_time_percent=rep(NA,nRow), mean_occurence=rep(NA,nRow), sem_occurence=rep(NA,nRow), stringsAsFactors=FALSE)
+    for ( iCatg in 1:nCatg)
+    {
+        for ( iTL in 1:nTL )
+        {
+            sumDf[(iCatg-1)*nTL+iTL, 'category'] <- listCatg[iCatg]
+            sumDf[(iCatg-1)*nTL+iTL, 'total_time'] <- listTL[iTL]
+            
+            tmpDfSum <- dfSumCourtship[(dfSumCourtship$category==listCatg[iCatg])&(dfSumCourtship$total_time==listTL[iTL]), ]
+            
+            tmpTimePercent <- tmpDfSum$time_percent
+            sumDf[(iCatg-1)*nTL+iTL, 'mean_time_percent'] <- mean(tmpTimePercent)
+            sumDf[(iCatg-1)*nTL+iTL, 'sem_time_percent'] <- sd(tmpTimePercent)/sqrt(sum(!is.na(tmpTimePercent)))
+            
+            tmpOccurence <- tmpDfSum$occurence
+            sumDf[(iCatg-1)*nTL+iTL, 'mean_occurence'] <- mean(tmpOccurence)
+            sumDf[(iCatg-1)*nTL+iTL, 'sem_occurence'] <- sd(tmpOccurence)/sqrt(sum(!is.na(tmpOccurence)))
+            
+            tmpDfSum <- NULL
+            tmpTimePercent <- NULL
+            tmpOccurence <- NULL
+        }
+    }
+    
+    return(sumDf)
 }
