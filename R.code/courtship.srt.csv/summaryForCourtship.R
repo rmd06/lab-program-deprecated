@@ -93,11 +93,21 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
     if (csvDir=="")
     {
         csvDir <- choose.dir()
+		if ( is.na(csvDir) ) 
+		{
+			print("Directory selection has been canceled.")
+			return(NULL)
+		}
         outfile <- paste(csvDir, "/summary.csv", sep="")
     }
     
     # reading file list
     listCsv <- list.files(path=csvDir, pattern="*.srt.csv", full.names=TRUE)
+	if ( identical(listCsv, character(0)) ) 
+	{
+		print("No .srt.csv file detected.")
+		return(NULL)
+	}
     nFile <- length(listCsv)
 
     # preparing Time Length list (a vector of time points) and Category list (a vector of behaviorial tags)
