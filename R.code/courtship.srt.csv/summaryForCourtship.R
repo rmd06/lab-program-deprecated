@@ -120,7 +120,7 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
     # iterate through each csv file, calculating each summary, then inject them to blocks of previously prepared data frame
     for ( iFile in 1:nFile )
     {
-        print(paste("Begin processing", listCsv[iFile]), "...")
+        print(paste("Begin processing", listCsv[iFile], "..."))
         
         sumCsv[((iFile-1)*nTL*nCatg+1):(iFile*nTL*nCatg), ] <- sumCourtshipCsv(listCsv[iFile], listTL, listCatg)
         
