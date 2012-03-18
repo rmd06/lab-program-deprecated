@@ -1,17 +1,16 @@
 @echo off
 
 REM Reference: http://stackoverflow.com/questions/8397674/windows-batch-file-looping-through-directories-to-process-files
-
-REM REQUIRE ffmpeg installation
+REM Require ffmpeg installation
 echo.
 echo ========================================
 echo About to convert ALL .avi files to .mp4
 echo   including ALL subdirectories!
 echo If this is NOT you what want, 
-echo   CLOSE THIS WINDOW to end this batch.
-echo   -----------------
+echo         CLOSE THIS WINDOW 
+echo                  to end this batch.
 echo If this is exactly you want,
-echo          -- press any key to continue.
+echo          press any key to continue.
 echo ========================================
 echo.
 
