@@ -83,7 +83,7 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
      
   return(dfCatg)
 }
- 
+
 sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary.csv", sep=""), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'), na.zero=FALSE)
 {
     # sumCourtshipDir will calculate and return a summary of analysed srt files (the csvs)
@@ -93,21 +93,21 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
     if (csvDir=="")
     {
         csvDir <- choose.dir()
-		if ( is.na(csvDir) ) 
-		{
-			print("Directory selection has been canceled.")
-			return(NULL)
-		}
+        if ( is.na(csvDir) ) 
+        {
+            print("Directory selection has been canceled.")
+            return(NULL)
+        }
         outfile <- paste(csvDir, "/summary.csv", sep="")
     }
     
     # reading file list
     listCsv <- list.files(path=csvDir, pattern="*.srt.csv", full.names=TRUE)
-	if ( identical(listCsv, character(0)) ) 
-	{
-		print("No .srt.csv file detected.")
-		return(NULL)
-	}
+    if ( identical(listCsv, character(0)) ) 
+    {
+        print("No .srt.csv file detected.")
+        return(NULL)
+    }
     nFile <- length(listCsv)
 
     # preparing Time Length list (a vector of time points) and Category list (a vector of behaviorial tags)
@@ -136,8 +136,8 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
     if (out)
     {
         outfileNoNA <- paste(csvDir, "/summary_noNA.csv", sep="")
-        write.csv(sumCsv, file=outfile)
-        write.csv(sumCsvNoNA, file=outfileNoNA)
+        write.csv(sumCsv, file=outfile, row.names=FALSE)
+        write.csv(sumCsvNoNA, file=outfileNoNA, row.names=FALSE)
         print(paste("written to file", outfile, "and", outfileNoNA))
     }
     
@@ -194,4 +194,56 @@ sumCatgForAll <- function(dfSumCourtship)
     }
     
     return(sumDf)
+}
+
+readCourtshipLatency <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/sumlatency.csv", sep=""))
+{
+    # initializing directory selection
+    if (csvDir=="")
+    {
+        csvDir <- choose.dir()
+        if ( is.na(csvDir) ) 
+        {
+            print("Directory selection has been canceled.")
+            return(NULL)
+        }
+        outfile <- paste(csvDir, "/sumlatency.csv", sep="")
+    }
+    
+    # reading file list
+    listCsv <- list.files(path=csvDir, pattern="*.srt.csv", full.names=TRUE)
+    if ( identical(listCsv, character(0)) ) 
+    {
+        print("No .srt.csv file detected.")
+        return(NULL)
+    }
+    nFile <- length(listCsv)
+    
+    latencyDf <- data.frame(filename=rep("", nFile), latency=rep(NA, nFile), stringsAsFactors=FALSE)
+    
+    for ( iFile in 1:nFile )
+    {
+        print(paste("Reading", listCsv[iFile], "..."))
+        
+        tmpDf <- read.csv(file=listCsv[iFile], header=TRUE)
+        tmpDf <- tmpDf[tmpDf$text=='latency', c('start_miliSec', 'end_miliSec')]
+        
+        latencyDf[iFile, 'filename'] <- basename(listCsv[iFile])
+        
+        if ( (!is.null(tmpDf))&(nrow(tmpDf)==as.integer(1)) )
+        {
+            latencyDf[iFile, 'latency'] <- tmpDf[, 'end_miliSec'] - tmpDf[, 'start_miliSec']
+        }
+        
+        print("...done.")
+    }
+    
+    if (out)
+    {
+        write.csv(latencyDf, file=outfile, row.names=FALSE)
+        print(paste("Written results to file", outfile))
+    }
+    
+    return(latencyDf)
+    
 }
