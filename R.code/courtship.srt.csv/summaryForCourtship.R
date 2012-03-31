@@ -150,6 +150,7 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
 sumCatgForAll <- function(dfSumCourtship)
 {
     # sumCatgForAll will do summary statistics on each category for each time length
+    # NOTE: Treat NA cautiously. This summary is based on ?mean(..., na.rm=FALSE)
     
     # first, get all the categories and time lengths
     factoredSum <- dfSumCourtship
@@ -246,4 +247,35 @@ readCourtshipLatency <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/su
     
     return(latencyDf)
     
+}
+
+unblindCourtshipData <- function(summaryCsv="", unblindCsv="")
+{
+    # initializing file selection
+    if (summaryCsv=="")
+    {
+        summaryCsv <- choose.files(caption="Select SUMMARY csv file")
+        if ( identical(summaryCsv, character(0)) ) 
+        {
+            print("File selection has been canceled.")
+            return(NULL)
+        }
+    }
+    
+    if (unblindCsv=="")
+    {
+        unblindCsv <- choose.files(caption="Select UNBLIND csv file")
+        if ( identical(unblindCsv, character(0)) ) 
+        {
+            print("File selection has been canceled.")
+            return(NULL)
+        }
+    }
+    
+    sumDf <- read.csv(file=summaryCsv, stringsAsFactors=F)
+    unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
+    
+    unblind_data <- merge(sumDf, unblind, by='filename')
+    
+    return(unblind_data)
 }
