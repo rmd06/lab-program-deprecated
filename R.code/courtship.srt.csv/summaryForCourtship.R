@@ -276,6 +276,8 @@ unblindCourtshipData <- function(summaryCsv="", unblindCsv="")
     unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
     
     unblind_data <- merge(sumDf, unblind, by='filename')
+    unblind_data <- transform(unblind_data, total_time = as.character(as.integer(total_time)))
+#    unblind_data <- transform(unblind_data, total_time = as.character(total_time))
     
     return(unblind_data)
 }
