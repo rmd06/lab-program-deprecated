@@ -281,3 +281,53 @@ unblindCourtshipData <- function(summaryCsv="", unblindCsv="")
     
     return(unblind_data)
 }
+
+sumForOneCatg <- function(dfSumCourtship, catg='courtship')
+{
+    # sumForOneCatg will do summary statistics on each experiment group for each time length
+    # NOTE: Treat NA cautiously. This summary is based on ?mean(..., na.rm=FALSE)
+    
+    # first, get all the exp. groups and time lengths
+    factoredSum <- dfSumCourtship[dfSumCourtship$category==catg,]
+    # factoredSum$filename <- factor(factoredSum$filename)
+    factoredSum$exp_group <- factor(factoredSum$exp_group)
+    factoredSum$total_time <- factor(factoredSum$total_time)
+    
+    listGroup <- levels(factoredSum$exp_group)
+    nGroup <- length(listGroup)
+    
+    # sort time length for a bit nicer-looking output
+    listTL <- as.character(sort(as.integer(levels(factoredSum$total_time))))
+    nTL <- length(listTL)
+    
+    # initialize data frame for summary, structure as follows
+    # exp_group  total_time  mean_time_percent  sem_time_percent  mean_occurence sem_occurence
+    nRow <- nGroup*nTL
+    sumDf <- data.frame(exp_group=rep("",nRow), total_time=rep("",nRow), mean_time_percent=rep(NA, nRow), sem_time_percent=rep(NA,nRow), mean_occurence=rep(NA,nRow), sem_occurence=rep(NA, nRow), stringsAsFactors=FALSE)
+    
+    # inject the summaries one by one
+    for ( iGroup in 1:nGroup)
+    {
+        for ( iTL in 1:nTL )
+        {
+            sumDf[(iGroup-1)*nTL+iTL, 'exp_group'] <- listGroup[iGroup]
+            sumDf[(iGroup-1)*nTL+iTL, 'total_time'] <- listTL[iTL]
+            
+            tmpDfSum <- dfSumCourtship[(dfSumCourtship$exp_group==listGroup[iGroup])&(dfSumCourtship$total_time==listTL[iTL]), ]
+            
+            tmpTimePercent <- tmpDfSum$time_percent
+            sumDf[(iGroup-1)*nTL+iTL, 'mean_time_percent'] <- mean(tmpTimePercent)
+            sumDf[(iGroup-1)*nTL+iTL, 'sem_time_percent'] <- sd(tmpTimePercent)/sqrt(sum(!is.na(tmpTimePercent)))
+            
+            tmpOccurence <- tmpDfSum$occurence
+            sumDf[(iGroup-1)*nTL+iTL, 'mean_occurence'] <- mean(tmpOccurence)
+            sumDf[(iGroup-1)*nTL+iTL, 'sem_occurence'] <- sd(tmpOccurence)/sqrt(sum(!is.na(tmpOccurence)))
+            
+            tmpDfSum <- NULL
+            tmpTimePercent <- NULL
+            tmpOccurence <- NULL
+        }
+    }
+    
+    return(sumDf)
+}
