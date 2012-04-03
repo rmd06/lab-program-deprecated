@@ -127,7 +127,7 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
         print("...done.")
     }
     
-    # Copy a NA=0 version    
+    # Copy a NA=0 version
     sumCsvNoNA <- sumCsv
     sumCsvNoNA[is.na(sumCsvNoNA$time_percent), 'time_percent'] <- 0
     sumCsvNoNA[is.na(sumCsvNoNA$occurence), 'occurence'] <- 0
