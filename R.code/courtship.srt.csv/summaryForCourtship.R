@@ -197,18 +197,18 @@ sumCatgForAll <- function(dfSumCourtship)
     return(sumDf)
 }
 
-readCourtshipLatency <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/sumlatency.csv", sep=""))
+readCourtshipLatency <- function(latencyText="latency", csvDir="", out=TRUE, outfile=paste(csvDir, "/", latencyText, ".csv", sep=""))
 {
     # initializing directory selection
     if (csvDir=="")
     {
         csvDir <- choose.dir()
-        if ( is.na(csvDir) ) 
+        if ( is.na(csvDir) )
         {
             print("Directory selection has been canceled.")
             return(NULL)
         }
-        outfile <- paste(csvDir, "/sumlatency.csv", sep="")
+        outfile <- paste(csvDir, "/", latencyText, ".csv", sep="")
     }
     
     # reading file list
@@ -221,19 +221,21 @@ readCourtshipLatency <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/su
     nFile <- length(listCsv)
     
     latencyDf <- data.frame(filename=rep("", nFile), latency=rep(NA, nFile), stringsAsFactors=FALSE)
+    colnames(latencyDf)[2] <- latencyText
+    
     
     for ( iFile in 1:nFile )
     {
         print(paste("Reading", listCsv[iFile], "..."))
         
         tmpDf <- read.csv(file=listCsv[iFile], header=TRUE)
-        tmpDf <- tmpDf[tmpDf$text=='latency', c('start_miliSec', 'end_miliSec')]
+        tmpDf <- tmpDf[tmpDf$text==latencyText, c('start_miliSec', 'end_miliSec')]
         
         latencyDf[iFile, 'filename'] <- basename(listCsv[iFile])
         
         if ( (!is.null(tmpDf))&(nrow(tmpDf)==as.integer(1)) )
         {
-            latencyDf[iFile, 'latency'] <- tmpDf[, 'end_miliSec'] - tmpDf[, 'start_miliSec']
+            latencyDf[iFile, latencyText] <- tmpDf[, 'end_miliSec'] - tmpDf[, 'start_miliSec']
         }
         
         print("...done.")
