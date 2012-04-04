@@ -251,7 +251,7 @@ readCourtshipLatency <- function(latencyText="latency", csvDir="", out=TRUE, out
     
 }
 
-unblindCourtshipData <- function(summaryCsv="", unblindCsv="")
+unblindCourtshipCsv <- function(summaryCsv="", unblindCsv="")
 {
     # initializing file selection
     if (summaryCsv=="")
@@ -335,4 +335,43 @@ sumForOneCatg <- function(dfSumCourtship, catg='courtship')
     }
     
     return(sumDf)
+}
+
+sumAndUnblindCourtshipDir <- function(csvDir="", out=FALSE, listCatg=c('courtship'), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), na.zero=TRUE)
+{
+    # sumAndUnblindCourtshipDir will summarize all the *.srt.csv files, and add exp_group info into all the lines in summary(unblinding). 
+    
+    # initializing directory selection
+    if (csvDir=="")
+    {
+        csvDir <- choose.dir()
+        if ( is.na(csvDir) )
+        {
+            print("Directory selection has been canceled.")
+            return(NULL)
+        }
+    }
+
+    unblindCsv <- paste(csvDir, "/unblind.csv", sep="")
+    
+    sumDf <- sumCourtshipDir(csvDir=csvDir, out=out, listCatg=listCatg, listTL=listTL, na.zero=na.zero)
+    unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
+    
+    print("Adding experimental group info (Unblinding)...")
+    unblind_data <- merge(sumDf, unblind, by='filename')
+    if ('total_time' %in% colnames(unblind_data) )
+    {
+        unblind_data <- transform(unblind_data, total_time = as.integer(total_time))
+    }
+    
+    print("...added.")
+    
+    if (out)
+    {
+        outfile <- paste(csvDir, "/unblindedsummary.csv", sep="")
+        write.csv(unblind_data, file=outfile, row.names=FALSE)
+        print(paste("Written results to file", outfile))
+    }
+    
+    return(unblind_data)
 }
