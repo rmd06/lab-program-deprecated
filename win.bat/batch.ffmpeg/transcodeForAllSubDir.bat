@@ -22,8 +22,9 @@ goto :eof
 :treeProcess
 REM Do whatever you want here over the files of this subdir, for example:
 for %%f in (*.avi) do (
-    if exist new-%%~nf.mp4 goto :eof
-    ffmpeg -i %%f -vcodec mpeg4 new-%%~nf.mp4
+    if NOT exist new-%%~nf.mp4 (
+        ffmpeg -i %%f -vcodec mpeg4 new-%%~nf.mp4
+    )
 )
 
 for /D %%d in (*) do (
