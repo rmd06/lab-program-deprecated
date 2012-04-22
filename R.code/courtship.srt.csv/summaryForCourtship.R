@@ -142,6 +142,7 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
     }
     
     if (na.zero)
+        print("All NAs converted to 0.")
         return(sumCsvNoNA)
     else
         return(sumCsv)
