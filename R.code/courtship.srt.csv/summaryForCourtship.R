@@ -129,8 +129,8 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
     
     # Copy a NA=0 version
     sumCsvNoNA <- sumCsv
-    sumCsvNoNA[is.na(sumCsvNoNA$time_percent), 'time_percent'] <- 0
-    sumCsvNoNA[is.na(sumCsvNoNA$occurence), 'occurence'] <- 0
+    sumCsvNoNA[is.na(sumCsvNoNA$time_percent), 'time_percent'] <- 0L
+    sumCsvNoNA[is.na(sumCsvNoNA$occurence), 'occurence'] <- 0L
     
     # save to files
     if (out)
@@ -371,6 +371,59 @@ sumAndUnblindCourtshipDir <- function(csvDir="", out=FALSE, listCatg=c('courtshi
         outfile <- paste(csvDir, "/unblindedsummary.csv", sep="")
         write.csv(unblind_data, file=outfile, row.names=FALSE)
         print(paste("Written results to file", outfile))
+    }
+    
+    return(unblind_data)
+}
+
+readAndUnblindCourtshipLatency <- function(csvDir="", out=FALSE, latencyText="latency", no.na=FALSE, na.to=0L)
+{
+    # readAndUnblindCourtshipLatency will summarize all the *.srt.csv files, and add exp_group info into all the lines in summary(unblinding). 
+    
+    # initializing directory selection
+    if (csvDir=="")
+    {
+        csvDir <- choose.dir()
+        if ( is.na(csvDir) )
+        {
+            print("Directory selection has been canceled.")
+            return(NULL)
+        }
+    }
+
+    unblindCsv <- paste(csvDir, "/unblind.csv", sep="")
+    
+    latencyDf <- readCourtshipLatency(csvDir=csvDir, latencyText=latencyText, out=FALSE)
+    unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
+    
+    print("Adding experimental group info (Unblinding)...")
+    unblind_data <- merge(latencyDf, unblind, by='filename')
+    
+    print("...added.")
+    
+    if (no.na && is.numeric(na.to) && (length(na.to)==1) )
+    {
+        print("Converting NAs...")
+        noNA <- unblind_data
+        noNA[is.na(noNA[colnames(noNA)==latencyText]), latencyText] <- na.to
+        print(paste("...all NAs are now converted to", na.to))
+        return(noNA)
+    }
+    
+    if (out)
+    {
+        if ( no.na && is.numeric(na.to) && (length(na.to)==1) )
+        {
+            noNAfile <- paste(csvDir, "/unblinded", latencyText, "noNA.csv", sep="")
+            write.csv(noNA, file=noNAfile, row.names=FALSE)
+            print(paste("Written results to file", noNAfile))
+        }
+        else
+        {
+            outfile <- paste(csvDir, "/unblinded", latencyText, ".csv", sep="")
+            write.csv(unblind_data, file=outfile, row.names=FALSE)
+            print(paste("Written results to file", outfile))
+        }
     }
     
     return(unblind_data)
