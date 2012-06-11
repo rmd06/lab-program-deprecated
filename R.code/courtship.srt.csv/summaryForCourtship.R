@@ -314,7 +314,7 @@ sumForOneCatg <- function(dfSumCourtship, catg='courtship')
     sumDf <- data.frame(exp_group=rep("",nRow), total_time=rep("",nRow), mean_time_percent=rep(NA, nRow), sem_time_percent=rep(NA,nRow), mean_occurence=rep(NA,nRow), sem_occurence=rep(NA, nRow), stringsAsFactors=FALSE)
     
     # inject the summaries one by one
-    for ( iGroup in 1:nGroup)
+    for ( iGroup in 1:nGroup )
     {
         for ( iTL in 1:nTL )
         {
@@ -431,3 +431,142 @@ readAndUnblindCourtshipLatency <- function(csvDir="", out=FALSE, latencyText="la
     
     return(unblind_data)
 }
+
+###### non-cumulative time_percent #####
+
+sumCourtshipCsv2 <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'))
+{
+    # sumCourtshipCsv will analyze a .srt.csv file for a summary of 
+    #   each provided category by each provided time length.
+    #   IMPORTANT: time_percent is non-cumulative
+    
+    nTL <- length(listTL)
+    nCatg <- length(listCatg) 
+    
+    d <- sumCourtshipCsv(csvfile, listTL, listCatg)
+    dfCatg <- d
+    
+    # calculate non-cumulative time_pecent from cumulative time_percent
+    for ( iCatg in 1:nCatg )
+        {
+        for ( iTL in 2:nTL )
+            {
+            dfCatg[(dfCatg$category==listCatg[iCatg])&(dfCatg$total_time==listTL[iTL]),] <-
+            (listTL[iTL] *
+             d[(d$category==listCatg[iCatg])&(d$total_time==listTL[iTL]),]$time_percent -
+             listTL[iTL-1] * 
+             d[(d$category==listCatg[iCatg])&(d$total_time==listTL[iTL-1]),]$time_percent
+             ) / (listTL[iTL] - listTL[iTL-1])
+             }
+        }
+    
+    return(dfCatg)
+}
+
+sumCourtshipDir2 <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary.csv", sep=""), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'), na.zero=FALSE)
+{
+    # sumCourtshipDir will calculate and return a summary of analysed srt files (the csvs)
+    # it also output csv summary files
+    
+    # initializing directory selection
+    if (csvDir=="")
+    {
+        csvDir <- choose.dir()
+        if ( is.na(csvDir) ) 
+        {
+            print("Directory selection has been canceled.")
+            return(NULL)
+        }
+        outfile <- paste(csvDir, "/summary.csv", sep="")
+    }
+    
+    # reading file list
+    listCsv <- list.files(path=csvDir, pattern="*.srt.csv", full.names=TRUE)
+    if ( identical(listCsv, character(0)) ) 
+    {
+        print("No .srt.csv file detected.")
+        return(NULL)
+    }
+    nFile <- length(listCsv)
+
+    # preparing Time Length list (a vector of time points) and Category list (a vector of behaviorial tags)
+    nTL= length(listTL)
+    nCatg=length(listCatg)
+    
+    # initialize and prepare the output data frame
+    sumCsv <- createCourtshipDf(nFile*nTL*nCatg)
+    
+    # iterate through each csv file, calculating each summary, then inject them to blocks of previously prepared data frame
+    for ( iFile in 1:nFile )
+    {
+        print(paste("Begin processing", listCsv[iFile], "..."))
+        
+        sumCsv[((iFile-1)*nTL*nCatg+1):(iFile*nTL*nCatg), ] <- sumCourtshipCsv2(listCsv[iFile], listTL, listCatg)
+        
+        print("...done.")
+    }
+    
+    # Copy a NA=0 version
+    sumCsvNoNA <- sumCsv
+    sumCsvNoNA[is.na(sumCsvNoNA$time_percent), 'time_percent'] <- 0L
+    sumCsvNoNA[is.na(sumCsvNoNA$occurence), 'occurence'] <- 0L
+    
+    # save to files
+    if (out)
+    {
+        outfileNoNA <- paste(csvDir, "/summary_noNA.csv", sep="")
+        write.csv(sumCsv, file=outfile, row.names=FALSE)
+        write.csv(sumCsvNoNA, file=outfileNoNA, row.names=FALSE)
+        print(paste("written to file", outfile, "and", outfileNoNA))
+    }
+    
+    if (na.zero)
+    {
+        print("All NAs converted to 0.")
+        return(sumCsvNoNA)
+    }
+    else
+        return(sumCsv)
+}
+
+sumAndUnblindCourtshipDir2 <- function(csvDir="", out=FALSE, listCatg=c('courtship'), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), na.zero=TRUE)
+{
+    # sumAndUnblindCourtshipDir will summarize all the *.srt.csv files,
+    #   and add exp_group info into all the lines in summary(unblinding). 
+    #   IMPORTANT: time_percent is non-cumulative
+    
+    # initializing directory selection
+    if (csvDir=="")
+    {
+        csvDir <- choose.dir()
+        if ( is.na(csvDir) )
+        {
+            print("Directory selection has been canceled.")
+            return(NULL)
+        }
+    }
+
+    unblindCsv <- paste(csvDir, "/unblind.csv", sep="")
+    
+    sumDf <- sumCourtshipDir2(csvDir=csvDir, out=out, listCatg=listCatg, listTL=listTL, na.zero=na.zero)
+    unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
+    
+    print("Adding experimental group info (Unblinding)...")
+    unblind_data <- merge(sumDf, unblind, by='filename')
+    if ('total_time' %in% colnames(unblind_data) )
+    {
+        unblind_data <- transform(unblind_data, total_time = as.integer(total_time))
+    }
+    
+    print("...added.")
+    
+    if (out)
+    {
+        outfile <- paste(csvDir, "/unblindedsummary.csv", sep="")
+        write.csv(unblind_data, file=outfile, row.names=FALSE)
+        print(paste("Written results to file", outfile))
+    }
+    
+    return(unblind_data)
+}
+###### end non-cumulative time_percent #####
