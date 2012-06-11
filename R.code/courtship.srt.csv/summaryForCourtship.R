@@ -451,7 +451,7 @@ sumCourtshipCsv2 <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000,
         {
         for ( iTL in 2:nTL )
             {
-            dfCatg[(dfCatg$category==listCatg[iCatg])&(dfCatg$total_time==listTL[iTL]),] <-
+            dfCatg[(dfCatg$category==listCatg[iCatg])&(dfCatg$total_time==listTL[iTL]),]$time_percent <-
             (listTL[iTL] *
              d[(d$category==listCatg[iCatg])&(d$total_time==listTL[iTL]),]$time_percent -
              listTL[iTL-1] * 
