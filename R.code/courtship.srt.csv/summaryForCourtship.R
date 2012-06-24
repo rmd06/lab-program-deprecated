@@ -355,7 +355,7 @@ sumAndUnblindCourtshipDir <- function(csvDir="", unblindFile="", out=FALSE, list
         }
     }
 
-    if (unblindFile="")
+    if (unblindFile=="")
     {
         unblindFile <- "unblind.csv"
     }
@@ -399,7 +399,7 @@ readAndUnblindCourtshipLatency <- function(csvDir="", unblindFile="", out=FALSE,
         }
     }
     
-    if (unblindFile="")
+    if (unblindFile=="")
     {
         unblindFile <- "unblind.csv"
     }
@@ -556,7 +556,7 @@ sumAndUnblindCourtshipDir2 <- function(csvDir="", unblindFile="", out=FALSE, lis
         }
     }
     
-    if (unblindFile="")
+    if (unblindFile=="")
     {
         unblindFile <- "unblind.csv"
     }
