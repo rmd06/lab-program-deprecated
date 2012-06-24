@@ -384,7 +384,7 @@ sumAndUnblindCourtshipDir <- function(csvDir="", unblindFile="", out=FALSE, list
     return(unblind_data)
 }
 
-readAndUnblindCourtshipLatency <- function(csvDir="", out=FALSE, latencyText="latency", no.na=FALSE, na.to=0L)
+readAndUnblindCourtshipLatency <- function(csvDir="", unblindFile="", out=FALSE, latencyText="latency", no.na=FALSE, na.to=0L)
 {
     # readAndUnblindCourtshipLatency will summarize all the *.srt.csv files, and add exp_group info into all the lines in summary(unblinding). 
     
@@ -398,8 +398,13 @@ readAndUnblindCourtshipLatency <- function(csvDir="", out=FALSE, latencyText="la
             return(NULL)
         }
     }
+    
+    if (unblindFile="")
+    {
+        unblindFile <- "unblind.csv"
+    }
 
-    unblindCsv <- paste(csvDir, "/unblind.csv", sep="")
+    unblindCsv <- paste(csvDir, "/", unblindFile, sep="")
     
     latencyDf <- readCourtshipLatency(csvDir=csvDir, latencyText=latencyText, out=FALSE)
     unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
