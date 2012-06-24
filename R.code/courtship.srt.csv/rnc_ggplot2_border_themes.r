@@ -1,6 +1,8 @@
 # Rudolf Cardinal, March 2011
 # Simple extensions to ggplot2 (v0.8.7); see http://www.psychol.cam.ac.uk/statistics/R/
 
+library(grid)
+
 theme_L_border <- function(colour = "black", size = 1, linetype = 1) {
   # use with e.g.: ggplot(...) + opts( panel.border=theme_L_border() ) + ...
   structure(
