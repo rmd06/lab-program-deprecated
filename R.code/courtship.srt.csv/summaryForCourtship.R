@@ -340,7 +340,7 @@ sumForOneCatg <- function(dfSumCourtship, catg='courtship')
     return(sumDf)
 }
 
-sumAndUnblindCourtshipDir <- function(csvDir="", out=FALSE, listCatg=c('courtship'), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), na.zero=TRUE)
+sumAndUnblindCourtshipDir <- function(csvDir="", unblindFile="", out=FALSE, listCatg=c('courtship'), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), na.zero=TRUE)
 {
     # sumAndUnblindCourtshipDir will summarize all the *.srt.csv files, and add exp_group info into all the lines in summary(unblinding). 
     
@@ -355,7 +355,12 @@ sumAndUnblindCourtshipDir <- function(csvDir="", out=FALSE, listCatg=c('courtshi
         }
     }
 
-    unblindCsv <- paste(csvDir, "/unblind.csv", sep="")
+    if (unblindFile="")
+    {
+        unblindFile <- "unblind.csv"
+    }
+
+    unblindCsv <- paste(csvDir, "/", unblindFile, sep="")
     
     sumDf <- sumCourtshipDir(csvDir=csvDir, out=out, listCatg=listCatg, listTL=listTL, na.zero=na.zero)
     unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
@@ -529,7 +534,7 @@ sumCourtshipDir2 <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summar
         return(sumCsv)
 }
 
-sumAndUnblindCourtshipDir2 <- function(csvDir="", out=FALSE, listCatg=c('courtship'), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), na.zero=TRUE)
+sumAndUnblindCourtshipDir2 <- function(csvDir="", unblindFile="", out=FALSE, listCatg=c('courtship'), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), na.zero=TRUE)
 {
     # sumAndUnblindCourtshipDir will summarize all the *.srt.csv files,
     #   and add exp_group info into all the lines in summary(unblinding). 
@@ -545,8 +550,13 @@ sumAndUnblindCourtshipDir2 <- function(csvDir="", out=FALSE, listCatg=c('courtsh
             return(NULL)
         }
     }
+    
+    if (unblindFile="")
+    {
+        unblindFile <- "unblind.csv"
+    }
 
-    unblindCsv <- paste(csvDir, "/unblind.csv", sep="")
+    unblindCsv <- paste(csvDir, "/", unblindFile, sep="")
     
     sumDf <- sumCourtshipDir2(csvDir=csvDir, out=out, listCatg=listCatg, listTL=listTL, na.zero=na.zero)
     unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
