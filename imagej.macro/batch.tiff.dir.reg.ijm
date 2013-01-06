@@ -1,35 +1,41 @@
-// --- Main procedures begin ---
+// --- Main procedure begin ---
 
-ext ="nd2";
-inDir = getDirectory("--> INPUT: Choose Directory Containing " + ext + "Files <--");
+ext =""; // select dirs only
+inDir = getDirectory("--> INPUT: Choose Directory <--");
 outDir = getDirectory("--> OUTPUT: Choose Directory for TIFF Output <--");
 inList = getFileList(inDir);
 list = getFromFileList(ext, inList);
 
 // Checkpoint: get file list of *.nd2 files
-print("Below is a list of files to be converted:");
+print("Below is a list of directories to be converted:");
 printArray(list); // Implemented below
 
 for (i=0; i<list.length; i++) 
 {
   inFullname = inDir + list[i];
-  outFullname = outDir + list[i] + ".registered.tif";
+  outFullname = outDir + substring(list[i],0, lengthOf(list[i])-1) + ".registered.tif";
   print("Registering...",list[i]); // Checkpoint: Indicating progress
   
-  regNd2ToTiff(inFullname, outFullname, 1); // Implemented below
+  regTiffDirToTiff(inFullname, outFullname, 1); // Implemented below
 
   print("...done."); //Checkpoint: Done one.
 }
 
 print("--- All Done ---");
 
-// --- Main procedures end ---
+// --- Main procedure end ---
 
-function regNd2ToTiff(inFullname, outFullname, refSliceNo)
+function regTiffDirToTiff(inFullname, outFullname, refSliceNo)
 {
   setBatchMode(true);
+
+  tifflist = getFileList(inFullname);
+  tiffnames = getFromFileList("tif", tifflist);
+  fn = substring(inFullname,0, lengthOf(inFullname)-1) + "/" + tiffnames[0];
   
-  run("Bio-Formats Importer", "open='" + inFullname + "' autoscale color_mode=Default view=[Standard ImageJ] stack_order=Default virtual");
+  run("Image Sequence...", "open=" + 
+                             fn +
+                             " number=[] starting=1 increment=1 scale=100 file=[] or=[] sort");
   rename("todo");
   width = getWidth();
   height = getHeight();
@@ -99,7 +105,7 @@ function regNd2ToTiff(inFullname, outFullname, refSliceNo)
 
 function getFromFileList(ext, fileList)
 {
-  // Select from fileList array the filenames with specified extension ("" for directories)
+  // Select from fileList array the filenames with specified extension
   // and return a new array containing only the selected ones.
 
   // Depends on:
