@@ -34,9 +34,9 @@ function regTiffDirToTiff(inFullname, outFullname, refSliceNo)
   tiffnames = getFromFileList("tif", tifflist);
   fn = substring(inFullname,0, lengthOf(inFullname)-1) + "/" + tiffnames[0];
   
-  run("Image Sequence...", "open=" + 
+  run("Image Sequence...", "open=[" + 
                              fn +
-                             " number=[] starting=1 increment=1 scale=100 file=[] or=[] sort");
+                             "] number=[] starting=1 increment=1 scale=100 file=[] or=[] sort");
   rename("todo");
   width = getWidth();
   height = getHeight();
