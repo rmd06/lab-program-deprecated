@@ -1,12 +1,13 @@
 // --- Main procedure begin ---
+// Tested on ImageJ 1.47h, Fiji 
+//   at 2013 Jan 6
 
-ext =""; // select dirs only
 inDir = getDirectory("--> INPUT: Choose Directory <--");
 outDir = getDirectory("--> OUTPUT: Choose Directory for TIFF Output <--");
 inList = getFileList(inDir);
-list = getFromFileList(ext, inList);
+list = getFromFileList("", inList);  // select dirs only
 
-// Checkpoint: get file list of *.nd2 files
+// Checkpoint: get list of dirs
 print("Below is a list of directories to be converted:");
 printArray(list); // Implemented below
 
@@ -14,7 +15,7 @@ for (i=0; i<list.length; i++)
 {
   inFullname = inDir + list[i];
   outFullname = outDir + substring(list[i],0, lengthOf(list[i])-1) + ".registered.tif";
-  print("Registering...",list[i]); // Checkpoint: Indicating progress
+  print("Registering(",(i+1),"/",list.length,")...",list[i]); // Checkpoint: Indicating progress
   
   regTiffDirToTiff(inFullname, outFullname, 1); // Implemented below
 
