@@ -1,3 +1,47 @@
+## 2012 Mar
+## Analysis of wing extension and courtship bout. 
+
+## Wing extension. 
+## 1. wing extension occurence
+## 2. wing extension average duration.
+
+# load all the tools
+source("e:\\experiment\\courtship.srt.csv\\summaryForCourtship.R")
+source("e:\\experiment\\courtship.srt.csv\\helper01.R")
+library(ggplot2)
+
+# use convenient method "sumAndUnblindCourtshiopDir"
+# to get occurence and total duration
+udfWingExtension <- sumAndUnblindCourtshipDir(csvDir='.', listCatg=c("wing extension"), listTL=as.integer(c(300000)), out=FALSE, na.zero=TRUE)
+
+# re-caculate average_duration
+udfWingExtension$average_duration_ms <- udfWingExtension$time_percent * udfWingExtension$total_time / udfWingExtension$occurence
+
+# TODO: plot occurance and average duration
+# t1 <- summarySE(ua1, measurevar="time_percent", groupvars=c("exp_group","category","total_time"))
+
+# p1<-ggplot(t1, aes(y=time_percent, x=exp_group))
+# pd <- position_dodge(.1)
+# pp <- p1 + geom_errorbar(aes(ymin=time_percent-se, ymax=time_percent+se), position=pd) + geom_bar()
+# pp + opts(axis.title.x = theme_text(face="bold", colour="#990000", size=20), axis.text.x  = theme_text(angle=90, hjust=1.2, size=6))
+
+## Courtship bout
+
+# load all tools
+source("e:\\experiment\\courtship.srt.csv\\summaryForCourtship.R")
+source("e:\\experiment\\courtship.srt.csv\\helper01.R")
+library(ggplot2)
+
+# use convenient method "sumAndUnblindCourtshiopDir"
+# to get occurence and total duration in the first 5 min
+udfBout <- sumAndUnblindCourtshipDir(csvDir='.', listCatg=c("courtship bout"), listTL=as.integer(c(300000)), out=FALSE, na.zero=TRUE)
+
+# re-caculate average_duration
+udfBout$average_duration_ms <- udfBout$time_percent * udfBout$total_time / udfBout$occurence
+
+# TODO: plot 
+
+################
 # e:\WGX\data\2012-04-04~2012-04-19
 
 source("e:\\experiment\\R.code\\summaryForCourtship.R")
