@@ -1,3 +1,4 @@
+################
 ## 2012 Mar
 ## Analysis of wing extension and courtship bout. 
 
@@ -40,6 +41,21 @@ udfBout <- sumAndUnblindCourtshipDir(csvDir='.', listCatg=c("courtship bout"), l
 udfBout$average_duration_ms <- udfBout$time_percent * udfBout$total_time / udfBout$occurence
 
 # TODO: plot 
+
+################
+### Convert .event file to .srt.csv
+
+# load the tool
+source("e:\\experiment\\courtship.srt.csv\\csv_from_event.R")
+
+# current dir
+csvFromEventBatch(indir=".")
+
+# pick a dir
+csvFromEventBatch()
+
+###
+
 
 ################
 # e:\WGX\data\2012-04-04~2012-04-19
