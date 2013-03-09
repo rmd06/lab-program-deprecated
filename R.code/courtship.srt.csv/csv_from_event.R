@@ -1,6 +1,6 @@
-# csvFromEvent convert a ".event" plain text file into ".srt.csv" file, with proper data structure
 csvFromEvent <- function(ffnInput="", ffnOutput="")
-{
+{# csvFromEvent convert a ".event" plain text file into ".srt.csv" file, with proper data structure
+
     # initializing input file selection
     if (ffnInput=="")
     {
@@ -53,9 +53,10 @@ csvFromEvent <- function(ffnInput="", ffnOutput="")
     }
 }
 
-# csvFromEventBatch applies csvFromEvent function recursively to a dir
+
 csvFromEventBatch <- function(indir="", outdir="")
-{
+{# csvFromEventBatch applies csvFromEvent function recursively to a dir
+
     # initializing directory selection
     if (indir=="")
     {
