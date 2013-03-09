@@ -49,7 +49,7 @@ csvFromEvent <- function(ffnInput="", ffnOutput="")
         write.csv(dfCourtship, file=ffnOutput, row.names=FALSE)
         print(paste("Output done for", barefnInput))
     } else {
-        print("WARNING: Output not saved -- CSV file already exists!")
+        print(paste("WARNING:", barefnInput, " not saved -- CSV file already exists!"))
     }
 }
 

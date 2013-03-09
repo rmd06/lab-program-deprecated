@@ -76,7 +76,8 @@ msFromSrtTime <- function(srtTime = "")
 }
 
 csvFromSrt <- function(ffnInput="", ffnOutput="")
-{
+{# TODO: wrong output for multi-line text
+
     # initializing input file selection
     if (ffnInput=="")
     {
@@ -108,7 +109,7 @@ csvFromSrt <- function(ffnInput="", ffnOutput="")
         write.csv(dfSubtitles, file=ffnOutput, row.names=FALSE)
         print(paste("Output done for", barefnInput))
     } else {
-        print("WARNING: Output not saved -- CSV file already exists!")
+        print(paste("WARNING:", barefnInput, " not saved -- CSV file already exists!"))
     }
 }
 
