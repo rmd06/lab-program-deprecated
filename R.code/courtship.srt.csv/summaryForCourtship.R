@@ -46,9 +46,10 @@ sumDfCourtshipByTL <- function(TL, textCatg, dfCourtship)
     return(sumDf)
 }
  
-sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'), failOnStartTime=FALSE)
+sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'), failOnStartTime=TRUE)
 {
     # sumCourtshipCsv will analyze a .srt.csv file for a summary of each provided category by each provided time length 
+    # IMPORTANT: expects one and only one 'latency' event indicating true start(not video start)
     
     nTL <- length(listTL)
     nCatg <- length(listCatg)  
@@ -61,9 +62,12 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
     {# exactly one "latency" event indicate true start of the experiment
         TS <- b[b$text=='latency', 'start_miliSec']
     } else {# otherwise first event is the start
+    
         TS <- b[1, 'start_miliSec']
         if(failOnStartTime)
-            stop("Cannot find session start time: one and only one 'latency' event required")
+            stop("Cannot find session start time: one and only one 'latency' event required\n\tUse first event instead by setting failOnStartTime=FALSE")
+        else 
+            warning("'latency' event not valid, true start was gussesd using the first event")
     }
     
     # re-calibrate(offset) time using start time
@@ -94,7 +98,7 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
     return(dfCatg)
 }
 
-sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary.csv", sep=""), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'), na.zero=FALSE)
+sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary.csv", sep=""), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'), na.zero=FALSE, failOnStartTime=TRUE)
 {
     # sumCourtshipDir will calculate and return a summary of analysed srt files (the csvs)
     # it also output csv summary files
@@ -132,7 +136,7 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
     {
         print(paste("Begin processing", listCsv[iFile], "..."))
         
-        sumCsv[((iFile-1)*nTL*nCatg+1):(iFile*nTL*nCatg), ] <- sumCourtshipCsv(listCsv[iFile], listTL, listCatg)
+        sumCsv[((iFile-1)*nTL*nCatg+1):(iFile*nTL*nCatg), ] <- sumCourtshipCsv(listCsv[iFile], listTL, listCatg, failOnStartTime=failOnStartTime)
         
         print("...done.")
     }
