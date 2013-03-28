@@ -99,6 +99,7 @@ csvFromEventBatch <- function(indir="", outdir="", dfLabel=NULL)
     for ( iFile in 1:nFile )
     {
         inFn <- flistEventFile[iFile]
+        # strip the last .* extension, e.g. barename.ext.ension --> barename.ext
         barefnInput <- sub("[.][^.]*$", "\\1", basename(inFn), perl=T)
         outFn <- paste(outdir, "/", barefnInput, ".srt.csv", sep="")
         

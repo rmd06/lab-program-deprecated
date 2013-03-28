@@ -53,7 +53,8 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
     
     nTL <- length(listTL)
     nCatg <- length(listCatg)  
-    fn <- basename(csvfile)
+    # strip all extensions, e.g. base.ext.ension --> base
+    fn <- sub("[.].*$", "\\1", basename(csvfile), perl=T)
     
     b<-read.csv(file=csvfile, header=T)
     
@@ -248,7 +249,7 @@ readCourtshipLatency <- function(latencyText="latency", csvDir="", out=TRUE, out
         tmpDf <- read.csv(file=listCsv[iFile], header=TRUE)
         tmpDf <- tmpDf[tmpDf$text==latencyText, c('start_miliSec', 'end_miliSec')]
         
-        latencyDf[iFile, 'filename'] <- basename(listCsv[iFile])
+        latencyDf[iFile, 'filename'] <- sub("[.].*$", "\\1", basename(listCsv[iFile]), perl=T)
         
         if ( (!is.null(tmpDf))&(nrow(tmpDf)==as.integer(1)) )
         {
@@ -269,7 +270,7 @@ readCourtshipLatency <- function(latencyText="latency", csvDir="", out=TRUE, out
 }
 
 unblindCourtshipCsv <- function(summaryCsv="", unblindCsv="")
-{
+{# This will translate filename into experiment categories
     # initializing file selection
     if (summaryCsv=="")
     {
@@ -293,6 +294,7 @@ unblindCourtshipCsv <- function(summaryCsv="", unblindCsv="")
     
     sumDf <- read.csv(file=summaryCsv, stringsAsFactors=F)
     unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
+    unblind <- transform(unblind, filename = sub("[.].*$", "\\1", filename, perl=T))
     
     unblind_data <- merge(sumDf, unblind, by='filename')
     if ('total_time' %in% colnames(unblind_data) )
@@ -305,7 +307,7 @@ unblindCourtshipCsv <- function(summaryCsv="", unblindCsv="")
 }
 
 sumForOneCatg <- function(dfSumCourtship, catg='courtship')
-{
+{# DEPRECATED: use method summarySE in helper01.R instead
     # sumForOneCatg will do summary statistics on each experiment group for each time length
     # NOTE: Treat NA cautiously. This summary is based on ?mean(..., na.rm=FALSE)
     
@@ -361,7 +363,7 @@ sumAndUnblindCourtshipDir <- function(csvDir="", unblindFile="", out=FALSE, list
     # initializing directory selection
     if (csvDir=="")
     {
-        csvDir <- choose.dir()
+        csvDir <- choose.dir(default=getwd(), caption="Select Directory of csv files")
         if ( is.na(csvDir) )
         {
             print("Directory selection has been canceled.")
@@ -371,13 +373,18 @@ sumAndUnblindCourtshipDir <- function(csvDir="", unblindFile="", out=FALSE, list
 
     if (unblindFile=="")
     {
-        unblindFile <- "unblind.csv"
+        unblindFile <- choose.files(default=paste(csvDir, "/unblind.csv", sep=""), caption="Select UNBLIND csv file")
+        if ( identical(unblindFile, character(0)) ) 
+        {
+            print("File selection has been canceled.")
+            return(NULL)
+        }
     }
-
-    unblindCsv <- paste(csvDir, "/", unblindFile, sep="")
     
     sumDf <- sumCourtshipDir(csvDir=csvDir, out=out, listCatg=listCatg, listTL=listTL, na.zero=na.zero)
-    unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
+    sumDf <- transform(sumDf, filename = sub("[.].*$", "\\1", filename, perl=T))
+    unblind <- read.csv(file=unblindFile, stringsAsFactors=F)
+    unblind <- transform(unblind, filename = sub("[.].*$", "\\1", filename, perl=T))
     
     print("Adding experimental group info (Unblinding)...")
     unblind_data <- merge(sumDf, unblind, by='filename')
