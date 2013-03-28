@@ -1,5 +1,6 @@
-csvFromEvent <- function(ffnInput="", ffnOutput="")
+csvFromEvent <- function(ffnInput="", ffnOutput="", dfLabel=NULL)
 {# csvFromEvent convert a ".event" plain text file into ".srt.csv" file, with proper data structure
+# dfLabel <- data.frame(text=c("orientation", "wing extension", "tapping", "probiscis extension", "rejection", "attempt copulation", "latency", "latency to copulation", "courtship bout"), noCatg=c(1, 2, 3, 4, 5, 6, 7, 8, 9), stringsAsFactors=FALSE)
 
     # initializing input file selection
     if (ffnInput=="")
@@ -28,7 +29,10 @@ csvFromEvent <- function(ffnInput="", ffnOutput="")
     colnames(dfRaw) <- c("noCatg", "start_s", "end_s")
     
     # translate categories 
-    dfLabel <- data.frame(text=c("orientation", "wing extension", "tapping", "probiscis extension", "rejection", "attempt copulation", "latency", "latency to copulation", "courtship bout"), noCatg=c(1, 2, 3, 4, 5, 6, 7, 8, 9))
+    if (is.null(dfLabel))
+    {
+        dfLabel <- data.frame(text=c("orientation", "wing extension", "tapping", "probiscis extension", "rejection", "attempt copulation", "latency", "latency to copulation", "courtship bout"), noCatg=c(1, 2, 3, 4, 5, 6, 7, 8, 9), stringsAsFactors=FALSE)
+    }
     
     dfCourtship <- merge(dfLabel, dfRaw, by="noCatg")
     
@@ -58,13 +62,13 @@ csvFromEvent <- function(ffnInput="", ffnOutput="")
 }
 
 
-csvFromEventBatch <- function(indir="", outdir="")
+csvFromEventBatch <- function(indir="", outdir="", dfLabel=NULL)
 {# csvFromEventBatch applies csvFromEvent function recursively to a dir
 
     # initializing directory selection
     if (indir=="")
     {
-        indir <- choose.dir()
+        indir <- choose.dir(caption="Select .event file folder")
         if ( is.na(indir) )
         {
             print("Directory selection has been canceled.")
@@ -74,7 +78,12 @@ csvFromEventBatch <- function(indir="", outdir="")
     
     if (outdir=="")
     {
-        outdir <- indir
+        outdir <- choose.dir(default=indir, caption="Save .srt file to folder")
+        if ( is.na(outdir) )
+        {
+            print("Directory selection has been canceled.")
+            return(NULL)
+        }
     }
     
     # reading file list
@@ -91,8 +100,8 @@ csvFromEventBatch <- function(indir="", outdir="")
     {
         inFn <- flistEventFile[iFile]
         barefnInput <- sub("[.][^.]*$", "\\1", basename(inFn), perl=T)
-        outFn <- paste(outdir, barefnInput, ".csv", sep="")
+        outFn <- paste(outdir, "/", barefnInput, ".csv", sep="")
         
-        csvFromEvent(ffnInput=inFn, ffnOutput=outFn)
+        csvFromEvent(ffnInput=inFn, ffnOutput=outFn, dfLabel=dfLabel)
     }
 }

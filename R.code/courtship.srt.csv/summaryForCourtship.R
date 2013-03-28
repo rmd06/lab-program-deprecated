@@ -9,6 +9,8 @@ createCourtshipDf <- function(nRows)
 sumDfCourtshipByTL <- function(TL, textCatg, dfCourtship)
 {
     #  sumDfCourtshipByTL will return summary about the given behavior category and occurence of _A_ given 'category' for _A_ given time length in a courtship data frame
+    #  IMPORTANT: assumes start time = 0
+    #  IMPORTANT: if event's end time > TL, the end time is set to TL
 
     # if category does not exist, all the summary should be NA
     ckCatg <- dfCourtship$text==textCatg
@@ -20,7 +22,7 @@ sumDfCourtshipByTL <- function(TL, textCatg, dfCourtship)
     {
     # if category do exist, calculate interval for the time length provided
     
-        # select useful columns for the given category (may well be many rows)
+        # select relevant columns, for the given category and time length
         courtshipTextCatg <- dfCourtship[(dfCourtship$text==textCatg)&(dfCourtship$start_miliSec<TL), c('start_miliSec', 'end_miliSec', 'interval_miliSec')]
         
         # truncate if any 'end' time exceeds the given time length
@@ -55,8 +57,14 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
     b<-read.csv(file=csvfile, header=T)
     
     # get start time
-    TS <- b[b$text=='latency', 'start_miliSec']
-    # re-calibrate time using start time
+    if (sum(b$text=='latency') == 1)
+    {# exactly one "latency" event indicate true start of the experiment
+        TS <- b[b$text=='latency', 'start_miliSec']
+    } else {# otherwise first event is the start
+        TS <- b[1, 'start_miliSec']
+    }
+    
+    # re-calibrate(offset) time using start time
     b$start_miliSec <- b$start_miliSec - TS
     b$end_miliSec <- b$end_miliSec - TS
     
