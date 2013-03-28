@@ -46,7 +46,7 @@ sumDfCourtshipByTL <- function(TL, textCatg, dfCourtship)
     return(sumDf)
 }
  
-sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'))
+sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), listCatg=c('wing_extension', 'orientation'), failOnStartTime=FALSE)
 {
     # sumCourtshipCsv will analyze a .srt.csv file for a summary of each provided category by each provided time length 
     
@@ -62,6 +62,8 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
         TS <- b[b$text=='latency', 'start_miliSec']
     } else {# otherwise first event is the start
         TS <- b[1, 'start_miliSec']
+        if(failOnStartTime)
+            stop("Cannot find session start time: one and only one 'latency' event required")
     }
     
     # re-calibrate(offset) time using start time
