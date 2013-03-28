@@ -43,7 +43,11 @@ csvFromEvent <- function(ffnInput="", ffnOutput="")
     # get bare filename from input(base filename), i.e. strip the last .*
     barefnInput <- sub("[.][^.]*$", "\\1", basefnInput, perl=T)
     
-    ffnOutput <- paste("./", barefnInput, ".srt.csv", sep="")
+    if (ffnOutput == "")
+    {
+        ffnOutput <- paste("./", barefnInput, ".srt.csv", sep="")
+    }
+    
     if (!file.exists(ffnOutput))
     {
         write.csv(dfCourtship, file=ffnOutput, row.names=FALSE)
@@ -85,6 +89,10 @@ csvFromEventBatch <- function(indir="", outdir="")
     
     for ( iFile in 1:nFile )
     {
-        csvFromEvent(ffnInput=flistEventFile[iFile])
+        inFn <- flistEventFile[iFile]
+        barefnInput <- sub("[.][^.]*$", "\\1", basename(inFn), perl=T)
+        outFn <- paste(outdir, barefnInput, ".csv", sep="")
+        
+        csvFromEvent(ffnInput=inFn, ffnOutput=outFn)
     }
 }
