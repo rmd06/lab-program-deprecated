@@ -100,7 +100,7 @@ csvFromEventBatch <- function(indir="", outdir="", dfLabel=NULL)
     {
         inFn <- flistEventFile[iFile]
         barefnInput <- sub("[.][^.]*$", "\\1", basename(inFn), perl=T)
-        outFn <- paste(outdir, "/", barefnInput, ".csv", sep="")
+        outFn <- paste(outdir, "/", barefnInput, ".srt.csv", sep="")
         
         csvFromEvent(ffnInput=inFn, ffnOutput=outFn, dfLabel=dfLabel)
     }
