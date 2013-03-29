@@ -62,13 +62,14 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
     if (sum(b$text=='latency') == 1)
     {# exactly one "latency" event indicate true start of the experiment
         TS <- b[b$text=='latency', 'start_miliSec']
-    } else {# otherwise first event is the start
+        
+    } else {# otherwise assume start time = 0
     
-        TS <- b[1, 'start_miliSec']
+        TS <- 0
         if(failOnStartTime)
             stop("Cannot find session start time: one and only one 'latency' event required\n\tUse first event instead by setting failOnStartTime=FALSE")
         else 
-            warning("'latency' event not valid, true start was gussesd using the first event")
+            warning("'latency' event not valid, true start was gussesd as 0")
     }
     
     # re-calibrate(offset) time using start time
