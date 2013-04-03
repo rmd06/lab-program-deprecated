@@ -1,4 +1,89 @@
 ################
+## 20130403 latency
+
+## unblind contains 2 col of grouping data
+## mod facet title text appearance
+
+source("e:\\experiment\\courtship.srt.csv\\summaryForCourtship.R")
+source("e:\\experiment\\courtship.srt.csv\\helper01.R")
+library(ggplot2)
+
+ul <- readAndUnblindCourtshipLatency(csvDir='.', unblindFile='unblind.csv', latencyText="latency",no.na=T,na.to=0L)
+
+t3 <- summarySE(ul, measurevar="latency", groupvar=c("genotype","group"))
+
+# for th-flp
+sel <- c("cs_x_m1406",
+        "cs_x_m1407",
+        "th_gal4/+",
+        "th_x_m1406", 
+        "th_x_m1407")
+ 
+t33 <- t3[t3$genotype %in% sel,]
+t33$latency <- t33$latency/1000
+t33$sd <- t33$sd/1000
+t33$se <- t33$se/1000
+t33$ci <- t33$se/1000
+t33[t33$group=="c",'group'] <- "Ctrl"
+t33[t33$group=="e",'group'] <- "Exp"
+
+
+pd <- position_dodge(.1)
+p3 <- ggplot(t33, aes(x=group, y=latency)) +
+      facet_grid(. ~ genotype) +
+      geom_errorbar(aes(ymin=latency-se, ymax=latency+se), position=pd, width=0.6) +
+      geom_bar() +
+      geom_text(aes(label=paste("n=", N,sep="")), color="white", vjust=1.2) +
+      opts(axis.title.x = theme_blank(), 
+           axis.text.x  = theme_text(angle=60, hjust=1, vjust=1, size=20),
+           axis.title.y = theme_text(angle=90, size=20),
+           axis.text.y  = theme_text(size=16),
+           strip.text.x = theme_text(size=20))
+    
+p3
+
+pdf("latency.pdf", width=15, height=6.2)
+p3
+dev.off()
+
+
+# for TNT lines
+sel2 <- c("uas_tnte/+;th_gal4/+",
+        "uas_tntin/+;th_gal4/+",
+        "uas_tntin/+",
+        "uas_tnte/+", 
+        "th_gal4/+")
+ 
+t34 <- t3[t3$genotype %in% sel2,]
+t34$latency <- t34$latency/1000
+t34$sd <- t34$sd/1000
+t34$se <- t34$se/1000
+t34$ci <- t34$se/1000
+t34[t34$group=="c",'group'] <- "Ctrl"
+t34[t34$group=="e",'group'] <- "Exp"
+
+
+pd <- position_dodge(.1)
+p34 <- ggplot(t34, aes(x=group, y=latency)) +
+      facet_grid(. ~ genotype) +
+      geom_errorbar(aes(ymin=latency-se, ymax=latency+se), position=pd, width=0.6) +
+      geom_bar() +
+      geom_text(aes(label=paste("n=", N,sep="")), color="white", vjust=1.2) +
+      opts(axis.title.x = theme_blank(), 
+           axis.text.x  = theme_text(angle=60, hjust=1, vjust=1, size=20),
+           axis.title.y = theme_text(angle=90, size=20),
+           axis.text.y  = theme_text(size=16),
+           strip.text.x = theme_text(size=20))
+           
+p34
+
+pdf("latency2.pdf", width=15, height=6.2)
+p34
+dev.off()
+
+
+
+################
 ## 2012 Mar
 ## Analysis of wing extension and courtship bout. 
 

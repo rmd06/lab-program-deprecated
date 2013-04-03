@@ -1,15 +1,25 @@
 createCourtshipDf <- function(nRows)
-{
+{# tool function
+
     # createCourtshipDf will create an empty data frame for holding courtship summary
     df <- data.frame(filename = rep("", nRows), category = rep("", nRows), total_time = rep("", nRows), time_percent = rep(NA, nRows), occurence = rep(NA, nRows), stringsAsFactors=FALSE)
     
     return(df)
 }
 
+barename <- function(fn)
+{# tool function
+
+    # barename returns stripped filename without extension
+    # strip all extensions, e.g. base.ext.ension --> base
+    return(sub("[.].*$", "\\1", basename(fn), perl=T))
+
+}
+
 sumDfCourtshipByTL <- function(TL, textCatg, dfCourtship)
 {
     #  sumDfCourtshipByTL will return summary about the given behavior category and occurence of _A_ given 'category' for _A_ given time length in a courtship data frame
-    #  IMPORTANT: assumes start time = 0
+    #  IMPORTANT: assumes start time(offset) = 0
     #  IMPORTANT: if event's end time > TL, the end time is set to TL
 
     # if category does not exist, all the summary should be NA
@@ -54,7 +64,7 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
     nTL <- length(listTL)
     nCatg <- length(listCatg)  
     # strip all extensions, e.g. base.ext.ension --> base
-    fn <- sub("[.].*$", "\\1", basename(csvfile), perl=T)
+    fn <- barename(csvfile)
     
     b<-read.csv(file=csvfile, header=T)
     
@@ -62,10 +72,11 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
     if (sum(b$text=='latency') == 1)
     {# exactly one "latency" event indicate true start of the experiment
         TS <- b[b$text=='latency', 'start_miliSec']
-        
-    } else {# otherwise assume start time = 0
-    
+    } 
+    else 
+    {# otherwise assume start time = 0
         TS <- 0
+
         if(failOnStartTime)
             stop("Cannot find session start time: one and only one 'latency' event required\n\tUse first event instead by setting failOnStartTime=FALSE")
         else 
@@ -76,7 +87,7 @@ sumCourtshipCsv <- function(csvfile, listTL=as.integer(c(60000, 120000, 180000, 
     b$start_miliSec <- b$start_miliSec - TS
     b$end_miliSec <- b$end_miliSec - TS
     
-    # initialize summary data frame
+    # initialize summary data frame use tool function
     # dfCatg <- data.frame(filename = rep(fn, nCatg*nTL), category = rep("", nCatg*nTL), total_time = rep("", nCatg*nTL), time_percent = rep(NA, nCatg*nTL), occurence = rep(NA, nCatg*nTL), stringsAsFactors=FALSE)
     dfCatg <- createCourtshipDf(nCatg*nTL)
     
@@ -166,8 +177,60 @@ sumCourtshipDir <- function(csvDir="", out=TRUE, outfile=paste(csvDir, "/summary
         return(sumCsv)
 }
 
+sumForOneCatg <- function(dfSumCourtship, catg='courtship')
+{# DEPRECATED: use method summarySE in helper01.R instead
+
+    # sumForOneCatg will do summary statistics on each experiment group for each time length
+    # NOTE: Treat NA cautiously. This summary is based on ?mean(..., na.rm=FALSE)
+    
+    # first, get all the exp. groups and time lengths
+    factoredSum <- dfSumCourtship[dfSumCourtship$category==catg,]
+    # factoredSum$filename <- factor(factoredSum$filename)
+    factoredSum$exp_group <- factor(factoredSum$exp_group)
+    factoredSum$total_time <- factor(factoredSum$total_time)
+    
+    listGroup <- levels(factoredSum$exp_group)
+    nGroup <- length(listGroup)
+    
+    # sort time length for a bit nicer-looking output
+    listTL <- as.character(sort(as.integer(levels(factoredSum$total_time))))
+    nTL <- length(listTL)
+    
+    # initialize data frame for summary, structure as follows
+    # exp_group  total_time  mean_time_percent  sem_time_percent  mean_occurence sem_occurence
+    nRow <- nGroup*nTL
+    sumDf <- data.frame(exp_group=rep("",nRow), total_time=rep("",nRow), mean_time_percent=rep(NA, nRow), sem_time_percent=rep(NA,nRow), mean_occurence=rep(NA,nRow), sem_occurence=rep(NA, nRow), stringsAsFactors=FALSE)
+    
+    # inject the summaries one by one
+    for ( iGroup in 1:nGroup )
+    {
+        for ( iTL in 1:nTL )
+        {
+            sumDf[(iGroup-1)*nTL+iTL, 'exp_group'] <- listGroup[iGroup]
+            sumDf[(iGroup-1)*nTL+iTL, 'total_time'] <- listTL[iTL]
+            
+            tmpDfSum <- dfSumCourtship[(dfSumCourtship$exp_group==listGroup[iGroup])&(dfSumCourtship$total_time==listTL[iTL]), ]
+            
+            tmpTimePercent <- tmpDfSum$time_percent
+            sumDf[(iGroup-1)*nTL+iTL, 'mean_time_percent'] <- mean(tmpTimePercent)
+            sumDf[(iGroup-1)*nTL+iTL, 'sem_time_percent'] <- sd(tmpTimePercent)/sqrt(sum(!is.na(tmpTimePercent)))
+            
+            tmpOccurence <- tmpDfSum$occurence
+            sumDf[(iGroup-1)*nTL+iTL, 'mean_occurence'] <- mean(tmpOccurence)
+            sumDf[(iGroup-1)*nTL+iTL, 'sem_occurence'] <- sd(tmpOccurence)/sqrt(sum(!is.na(tmpOccurence)))
+            
+            tmpDfSum <- NULL
+            tmpTimePercent <- NULL
+            tmpOccurence <- NULL
+        }
+    }
+    
+    return(sumDf)
+}
+
 sumCatgForAll <- function(dfSumCourtship)
-{
+{# DEPRECATED: use method summarySE in helper01.R instead
+
     # sumCatgForAll will do summary statistics on each category for each time length
     # NOTE: Treat NA cautiously. This summary is based on ?mean(..., na.rm=FALSE)
     
@@ -239,6 +302,7 @@ readCourtshipLatency <- function(latencyText="latency", csvDir="", out=TRUE, out
     }
     nFile <- length(listCsv)
     
+    # prepare output
     latencyDf <- data.frame(filename=rep("", nFile), latency=rep(NA, nFile), stringsAsFactors=FALSE)
     colnames(latencyDf)[2] <- latencyText
     
@@ -250,7 +314,7 @@ readCourtshipLatency <- function(latencyText="latency", csvDir="", out=TRUE, out
         tmpDf <- read.csv(file=listCsv[iFile], header=TRUE)
         tmpDf <- tmpDf[tmpDf$text==latencyText, c('start_miliSec', 'end_miliSec')]
         
-        latencyDf[iFile, 'filename'] <- sub("[.].*$", "\\1", basename(listCsv[iFile]), perl=T)
+        latencyDf[iFile, 'filename'] <- barename(listCsv[iFile])
         
         if ( (!is.null(tmpDf))&(nrow(tmpDf)==as.integer(1)) )
         {
@@ -272,6 +336,7 @@ readCourtshipLatency <- function(latencyText="latency", csvDir="", out=TRUE, out
 
 unblindCourtshipCsv <- function(summaryCsv="", unblindCsv="")
 {# This will translate filename into experiment categories
+
     # initializing file selection
     if (summaryCsv=="")
     {
@@ -294,12 +359,13 @@ unblindCourtshipCsv <- function(summaryCsv="", unblindCsv="")
     }
     
     sumDf <- read.csv(file=summaryCsv, stringsAsFactors=F)
+    sumDf <- transform(sumDf, filename = barename(filename))
     unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
-    unblind <- transform(unblind, filename = sub("[.].*$", "\\1", filename, perl=T))
+    unblind <- transform(unblind, filename = barename(filename))
     
     unblind_data <- merge(sumDf, unblind, by='filename')
     if ('total_time' %in% colnames(unblind_data) )
-    {
+    {# there must be a reason for this, but i have forgotten
         unblind_data <- transform(unblind_data, total_time = as.character(as.integer(total_time)))
     }
 #    unblind_data <- transform(unblind_data, total_time = as.character(total_time))
@@ -307,59 +373,9 @@ unblindCourtshipCsv <- function(summaryCsv="", unblindCsv="")
     return(unblind_data)
 }
 
-sumForOneCatg <- function(dfSumCourtship, catg='courtship')
-{# DEPRECATED: use method summarySE in helper01.R instead
-    # sumForOneCatg will do summary statistics on each experiment group for each time length
-    # NOTE: Treat NA cautiously. This summary is based on ?mean(..., na.rm=FALSE)
-    
-    # first, get all the exp. groups and time lengths
-    factoredSum <- dfSumCourtship[dfSumCourtship$category==catg,]
-    # factoredSum$filename <- factor(factoredSum$filename)
-    factoredSum$exp_group <- factor(factoredSum$exp_group)
-    factoredSum$total_time <- factor(factoredSum$total_time)
-    
-    listGroup <- levels(factoredSum$exp_group)
-    nGroup <- length(listGroup)
-    
-    # sort time length for a bit nicer-looking output
-    listTL <- as.character(sort(as.integer(levels(factoredSum$total_time))))
-    nTL <- length(listTL)
-    
-    # initialize data frame for summary, structure as follows
-    # exp_group  total_time  mean_time_percent  sem_time_percent  mean_occurence sem_occurence
-    nRow <- nGroup*nTL
-    sumDf <- data.frame(exp_group=rep("",nRow), total_time=rep("",nRow), mean_time_percent=rep(NA, nRow), sem_time_percent=rep(NA,nRow), mean_occurence=rep(NA,nRow), sem_occurence=rep(NA, nRow), stringsAsFactors=FALSE)
-    
-    # inject the summaries one by one
-    for ( iGroup in 1:nGroup )
-    {
-        for ( iTL in 1:nTL )
-        {
-            sumDf[(iGroup-1)*nTL+iTL, 'exp_group'] <- listGroup[iGroup]
-            sumDf[(iGroup-1)*nTL+iTL, 'total_time'] <- listTL[iTL]
-            
-            tmpDfSum <- dfSumCourtship[(dfSumCourtship$exp_group==listGroup[iGroup])&(dfSumCourtship$total_time==listTL[iTL]), ]
-            
-            tmpTimePercent <- tmpDfSum$time_percent
-            sumDf[(iGroup-1)*nTL+iTL, 'mean_time_percent'] <- mean(tmpTimePercent)
-            sumDf[(iGroup-1)*nTL+iTL, 'sem_time_percent'] <- sd(tmpTimePercent)/sqrt(sum(!is.na(tmpTimePercent)))
-            
-            tmpOccurence <- tmpDfSum$occurence
-            sumDf[(iGroup-1)*nTL+iTL, 'mean_occurence'] <- mean(tmpOccurence)
-            sumDf[(iGroup-1)*nTL+iTL, 'sem_occurence'] <- sd(tmpOccurence)/sqrt(sum(!is.na(tmpOccurence)))
-            
-            tmpDfSum <- NULL
-            tmpTimePercent <- NULL
-            tmpOccurence <- NULL
-        }
-    }
-    
-    return(sumDf)
-}
-
 sumAndUnblindCourtshipDir <- function(csvDir="", unblindFile="", out=FALSE, listCatg=c('courtship'), listTL=as.integer(c(60000, 120000, 180000, 240000, 300000)), na.zero=TRUE)
 {
-    # sumAndUnblindCourtshipDir will summarize all the *.srt.csv files, and add exp_group info into all the lines in summary(unblinding). 
+    # sumAndUnblindCourtshipDir will summarize all the *.srt.csv files, and add exp_group etc. info into all the lines in summary(unblinding). 
     
     # initializing directory selection
     if (csvDir=="")
@@ -382,12 +398,16 @@ sumAndUnblindCourtshipDir <- function(csvDir="", unblindFile="", out=FALSE, list
         }
     }
     
+    # do summary analysis on all .srt.csv 
     sumDf <- sumCourtshipDir(csvDir=csvDir, out=out, listCatg=listCatg, listTL=listTL, na.zero=na.zero)
-    sumDf <- transform(sumDf, filename = sub("[.].*$", "\\1", filename, perl=T))
+
+    # prepare 'unblind' data
+    sumDf <- transform(sumDf, filename = barename(filename))
     unblind <- read.csv(file=unblindFile, stringsAsFactors=F)
-    unblind <- transform(unblind, filename = sub("[.].*$", "\\1", filename, perl=T))
+    unblind <- transform(unblind, filename = barename(filename))
     
     print("Adding experimental group info (Unblinding)...")
+
     unblind_data <- merge(sumDf, unblind, by='filename')
     if ('total_time' %in% colnames(unblind_data) )
     {
@@ -408,7 +428,7 @@ sumAndUnblindCourtshipDir <- function(csvDir="", unblindFile="", out=FALSE, list
 
 readAndUnblindCourtshipLatency <- function(csvDir="", unblindFile="", out=FALSE, latencyText="latency", no.na=FALSE, na.to=0L)
 {
-    # readAndUnblindCourtshipLatency will summarize all the *.srt.csv files, and add exp_group info into all the lines in summary(unblinding). 
+    # readAndUnblindCourtshipLatency will summarize all the *.srt.csv files, and add exp_group etc. info into all the lines in summary(unblinding). 
     
     # initializing directory selection
     if (csvDir=="")
@@ -429,8 +449,10 @@ readAndUnblindCourtshipLatency <- function(csvDir="", unblindFile="", out=FALSE,
     unblindCsv <- paste(csvDir, "/", unblindFile, sep="")
     
     latencyDf <- readCourtshipLatency(csvDir=csvDir, latencyText=latencyText, out=FALSE)
+    latencyDf <- transform(latencyDf, filename = barename(filename))
     unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
-    
+    unblind <- transform(unblind, filename = barename(filename))
+
     print("Adding experimental group info (Unblinding)...")
     unblind_data <- merge(latencyDf, unblind, by='filename')
     
@@ -442,18 +464,22 @@ readAndUnblindCourtshipLatency <- function(csvDir="", unblindFile="", out=FALSE,
         noNA <- unblind_data
         noNA[is.na(noNA[colnames(noNA)==latencyText]), latencyText] <- na.to
         print(paste("...all NAs are now converted to", na.to))
-        return(noNA)
-    }
-    
-    if (out)
-    {
-        if ( no.na && is.numeric(na.to) && (length(na.to)==1) )
+        
+        if (!out)
+        {
+            return(noNA)
+        }
+        else
         {
             noNAfile <- paste(csvDir, "/unblinded", latencyText, "noNA.csv", sep="")
             write.csv(noNA, file=noNAfile, row.names=FALSE)
-            print(paste("Written results to file", noNAfile))
+            print(paste("Written results to file", noNAfile))            
         }
-        else
+        
+    }
+    else
+    {
+        if (out)
         {
             outfile <- paste(csvDir, "/unblinded", latencyText, ".csv", sep="")
             write.csv(unblind_data, file=outfile, row.names=FALSE)
@@ -586,7 +612,9 @@ sumAndUnblindCourtshipDir2 <- function(csvDir="", unblindFile="", out=FALSE, lis
     unblindCsv <- paste(csvDir, "/", unblindFile, sep="")
     
     sumDf <- sumCourtshipDir2(csvDir=csvDir, out=out, listCatg=listCatg, listTL=listTL, na.zero=na.zero)
+    sumDf <- transform(sumDf, filename = barename(filename))
     unblind <- read.csv(file=unblindCsv, stringsAsFactors=F)
+    unblind <- transform(unblind, filename = barename(filename))
     
     print("Adding experimental group info (Unblinding)...")
     unblind_data <- merge(sumDf, unblind, by='filename')
