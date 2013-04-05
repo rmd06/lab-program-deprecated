@@ -1,11 +1,11 @@
-read.srt <- function(ffnInput)
+read.srt <- function(file="", encoding="unknown")
 {## reads in and parse .srt subtitles to a data frame
 
     # initializing input file selection
-    if (ffnInput=="")
+    if (file=="")
     {
-        ffnInput <- choose.files()
-        if ( is.na(ffnInput) )
+        file <- choose.files()
+        if ( is.na(file) )
         {
             print("File selection has been canceled.")
             return(NULL)
@@ -13,14 +13,15 @@ read.srt <- function(ffnInput)
     }
     
     # check filename integrety
-    basefnInput <- basename(ffnInput)
+    basefnInput <- basename(file)
     if (grepl("^[.~]", basefnInput) | !grepl("[.]srt$", basefnInput))
     {
         print("Wrong filename. Filename should end with '.srt' and not start with '.' or '~'.")
         return(NULL)
     }
     
-    lines <- readLines(ffnInput)
+    # assumes appropriate encoding
+    lines <- readLines(file, encoding=encoding, warn=FALSE)
 
     # append at the end an "empty line" to compensate for those not having one already
     lines <- c(lines, "")
