@@ -3,7 +3,7 @@
 
 :: DESCRIPTION Aims to offer an easy way to check primers (short nucleotides)
 ::             against one common template sequence.
-::             Each sequencing result file (with .seq) is checked using blastn as 
+::             Each sequencing result file (*.seq) is checked using blastn as 
 ::             "query", the template sequence as "subject".
 ::             The outputs are collected and combined into one html file.
 
