@@ -1,7 +1,8 @@
 function eventList = matFromSrt(fn, cText)
 %matFromSrt(fn,cText) will parse .srt file(filename = fn) into a matrix of 
 %  events having [start time, end time, event id]. Event id is determined
-%  from an input cell array cText (e.g. {'latency','courtship',''})
+%  from an input cell array cText (e.g. {'latency','courtship',''}), with
+%  -1 indicates no matches.
 
 %  Bangyu Zhou, 2013 Apr 2
 
@@ -60,8 +61,11 @@ while ~isnumeric(line)
         break
     end
     
-    % get event type
+    % get event type, if not in the list, = -1
     eventId = find(ismember(cText, line));
+    if isempty(eventId)
+        eventId = -1;
+    end
     
     eventList = [eventList; [startTime, endTime, eventId]];
 
