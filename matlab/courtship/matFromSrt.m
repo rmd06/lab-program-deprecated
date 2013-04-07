@@ -5,7 +5,7 @@ function eventList = matFromSrt(fn, cText)
 
 %  Bangyu Zhou, 2013 Apr 2
 
-if nargin < 2, cText = {'latency','courtship',''}; end
+if nargin < 2, cText = {'1','2','3','4','5','6','7','8','9','0','latency','courtship',''}; end
 
 [path, basename, ext] = fileparts(fn);
 if ~strcmpi(ext, '.srt')
